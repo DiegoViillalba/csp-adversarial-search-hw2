@@ -1,0 +1,26 @@
+[project]
+name = "hw2-ia"
+version = "0.1.0"
+description = "Tarea 2 - CSP, Metaheuristicas y Busqueda con Adversarios (IA 2027-I)"
+requires-python = ">=3.10"
+dependencies = [
+    "pyyaml>=6.0",
+    "numpy>=1.26",
+    "networkx>=3.2",
+    "ortools>=9.9",
+    "gym==0.26.2",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["src"]

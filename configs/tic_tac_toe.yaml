@@ -1,0 +1,17 @@
+# Parameters for experiments/run_tic_tac_toe.py
+seed: 42
+
+env:
+  size: 3
+  num_winning: 3
+  reward_win: 10
+  reward_normal: 0
+  reward_violation: 0
+  reward_drawn: 0
+
+agents:
+  player_1: minimax          # "minimax" or "alpha_beta" or "random"
+  player_2: alpha_beta
+
+num_games: 1
+render: true

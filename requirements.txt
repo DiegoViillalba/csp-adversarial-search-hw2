@@ -1,0 +1,6 @@
+pyyaml>=6.0
+numpy>=1.26
+networkx>=3.2
+ortools>=9.9
+gym==0.26.2
+pytest>=8.0

@@ -1,0 +1,31 @@
+# Parameters for experiments/run_graph_coloring.py and experiments/compare_coloring.py
+seed: 42
+
+instances:
+  - name: small
+    num_vertices: 50
+    edge_prob: 0.1
+    path: data/graphs/graph_50.txt
+  - name: large
+    num_vertices: 1000
+    edge_prob: 0.02
+    path: data/graphs/graph_1000.txt
+
+# k search range: for each instance, try k = k_min..k_max and keep the smallest
+# feasible k found (per method), capped by the time budget below.
+k_min: 2
+k_max: 12
+
+backtracking:
+  use_forward_checking: true
+  use_ac3: false
+  time_limit_seconds: 120
+
+metaheuristic:
+  initial_temperature: 10.0
+  cooling_rate: 0.995
+  max_iterations: 100000
+  time_limit_seconds: 120
+
+ortools:
+  time_limit_seconds: 60

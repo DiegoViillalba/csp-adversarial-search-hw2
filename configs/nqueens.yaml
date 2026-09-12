@@ -1,0 +1,21 @@
+# Parameters for experiments/run_nqueens.py and experiments/enumerate_nqueens.py
+seed: 42
+
+sizes: [8, 100]
+
+backtracking:
+  use_forward_checking: true
+  use_ac3: false            # try true once FC works, compare node counts in the report
+  time_limit_seconds: 120
+
+metaheuristic:
+  # params passed as **kwargs to src.problems.nqueens.solve_metaheuristic
+  initial_temperature: 10.0
+  cooling_rate: 0.995
+  max_iterations: 100000
+  time_limit_seconds: 120
+
+enumerate_all:
+  n: 100
+  max_solutions: 1000        # hard cap — see README, exhaustive enumeration at n=100 is infeasible
+  time_limit_seconds: 300
