@@ -11,6 +11,7 @@ Note: the vendored env exposes _decode/_is_win/_is_full as "private" methods
 and has no public terminal-test/utility API — we lean on them deliberately
 here rather than reimplementing win-checking logic a second time.
 """
+
 from __future__ import annotations
 
 import copy
@@ -30,7 +31,9 @@ PLAYER_X = 1  # moves first
 PLAYER_O = 2
 
 
-def make_env(size: int = 3, num_winning: int = 3, **reward_kwargs: Any) -> TictactoeEnv:
+def make_env(
+    size: int = 3, num_winning: int = 3, **reward_kwargs: Any
+) -> TictactoeEnv:
     env = TictactoeEnv(size=size, num_winning=num_winning, **reward_kwargs)
     env.reset()
     return env
@@ -53,14 +56,18 @@ def legal_moves(env: TictactoeEnv) -> list[int]:
     return env.get_valid_moves()
 
 
-def apply_move(env: TictactoeEnv, player: int, position: int) -> tuple[int, float, bool, str]:
+def apply_move(
+    env: TictactoeEnv, player: int, position: int
+) -> tuple[int, float, bool, str]:
     """Mutates `env` in place. `player` is 1 (X) or 2 (O) — this wrapper does the
     1/2 -> 0/1 translation the underlying env.step() expects.
 
     Returns (observation, reward, done, info) straight from env.step().
     """
     if player not in (PLAYER_X, PLAYER_O):
-        raise ValueError(f"player must be {PLAYER_X} or {PLAYER_O}, got {player}")
+        raise ValueError(
+            f"player must be {PLAYER_X} or {PLAYER_O}, got {player}"
+        )
     return env.step([player - 1, position])
 
 

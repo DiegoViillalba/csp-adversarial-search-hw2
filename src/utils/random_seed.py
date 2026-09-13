@@ -1,4 +1,5 @@
 """Reproducibility helper: seed every RNG the project touches from one place."""
+
 from __future__ import annotations
 
 import random

@@ -10,9 +10,17 @@ from .helpers import *
 
 
 class TictactoeEnv(gym.Env):
-    metadata = {'render.modes': ['human']}
+    metadata = {"render.modes": ["human"]}
 
-    def __init__(self, size=3, num_winning=3, reward_normal=0, reward_win=10, reward_violation=0, reward_drawn=0):
+    def __init__(
+        self,
+        size=3,
+        num_winning=3,
+        reward_normal=0,
+        reward_win=10,
+        reward_violation=0,
+        reward_drawn=0,
+    ):
         """
         Initializes an Tic-Tac-Toe Open AI gym environment.
         Make sure to call the reset function to reset to an empty space before making a move.
@@ -43,7 +51,7 @@ class TictactoeEnv(gym.Env):
         self.num_winning = num_winning
         self.size = size
         self.num_fields = size**2
-        self.observation_space = spaces.Discrete(3 ** self.num_fields)
+        self.observation_space = spaces.Discrete(3**self.num_fields)
         self.action_space = spaces.MultiDiscrete([2, self.num_fields])
 
         # rewards
@@ -73,34 +81,34 @@ class TictactoeEnv(gym.Env):
 
         player = action[0] + 1
         done = False
-        info = ''
+        info = ""
 
         action_successful = self._turn(action)
         if not action_successful:
-            info = 'invalid move'
+            info = "invalid move"
             reward = self.reward_violation
         else:
             if self._is_full():
                 done = True
 
                 if self._is_win(player):
-                    info = 'winning move'
+                    info = "winning move"
                     reward = self.reward_win
                 else:
-                    info = 'drawn move'
+                    info = "drawn move"
                     reward = self.reward_drawn
 
             else:
                 if self._is_win(player):
-                    info = 'winning move'
+                    info = "winning move"
                     reward = self.reward_win
                     done = True
                 else:
-                    info = 'normal move'
+                    info = "normal move"
                     reward = self.reward_normal
 
         observation = self.s
-        return observation, reward, done, info + f' player {player}'
+        return observation, reward, done, info + f" player {player}"
 
     def reset(self):
         """
@@ -129,16 +137,16 @@ class TictactoeEnv(gym.Env):
         """
 
         grid = self._decode(self.s)
-        print_chars = [' ', 'O', 'X']
+        print_chars = [" ", "O", "X"]
 
         rows = len(grid)
         cols = len(grid[0])
 
         for r in range(rows):
             for c in range(cols):
-                print('|', end='')
-                print(print_chars[grid[r][c]], end='')
-            print('|')
+                print("|", end="")
+                print(print_chars[grid[r][c]], end="")
+            print("|")
 
     def get_valid_moves(self):
         """
@@ -247,7 +255,6 @@ class TictactoeEnv(gym.Env):
             for c in range(cols):
                 value = grid[r][c]
                 if value == player:
-
                     # left, top, right, bottom, top-left, top-right, bottom-right, bottom-left
                     check_ver_list = [0, -1, 0, 1, -1, -1, 1, 1]
                     check_hor_list = [-1, 0, 1, 0, -1, 1, 1, -1]
@@ -263,7 +270,12 @@ class TictactoeEnv(gym.Env):
                             row_current = row_current + check_ver
                             col_current = col_current + check_hor
 
-                            if row_current >= rows or col_current >= cols or row_current < 0 or col_current < 0:
+                            if (
+                                row_current >= rows
+                                or col_current >= cols
+                                or row_current < 0
+                                or col_current < 0
+                            ):
                                 break
 
                             value_current = grid[row_current][col_current]

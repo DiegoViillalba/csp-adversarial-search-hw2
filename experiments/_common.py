@@ -1,6 +1,7 @@
 """Shared plumbing for experiments/*.py runners: config/results paths, and
 making `from src...` imports work no matter what directory a script is run
 from (as long as it's invoked as `python experiments/run_x.py`)."""
+
 from __future__ import annotations
 
 import sys

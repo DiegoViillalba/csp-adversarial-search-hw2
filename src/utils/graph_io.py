@@ -12,6 +12,7 @@ Nothing here decides *how* to color a graph — it only reads/writes instances
 and solutions, and generates random test instances so you have 50/1000-node
 graphs to run against.
 """
+
 from __future__ import annotations
 
 import random
@@ -34,7 +35,9 @@ def read_graph(path: str | Path) -> tuple[int, list[tuple[int, int]]]:
     return num_vertices, edges
 
 
-def write_graph(path: str | Path, num_vertices: int, edges: list[tuple[int, int]]) -> None:
+def write_graph(
+    path: str | Path, num_vertices: int, edges: list[tuple[int, int]]
+) -> None:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w") as f:

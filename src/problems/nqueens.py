@@ -1,33 +1,48 @@
-# N-queens problem implementation in Python
+"""
+Diego Villaba 12-09-26
 
-# In this implementation, we'll use a column-oriented approach.
+Python implementation of a N-queens CSP problem
 
-# NOTE: Though we cna improve this approach via combinatories theory,
-# It was kept simple for the sake of understanding backtracking
+inheriting the CSP class to createa na object
+"""
 
-N = 50
+from src.csp.problem import CSP
 
-positions = []
+# _____ Constants in the test problem _____
+
+# Used only for test
+N = 4
+
+COLUMNS = tuple(range(N))
+ROWS = tuple(range(N))
+
+DOMAINS = {column: ROWS for column in COLUMNS}
+
+# CONSTRAINS is not needed as it'll be encoded
+# directly on the satisfaction function
 
 
-def check_movement(queens, move):
+def constraint_satisfaction(assignment: dict[int, int]) -> bool:
     """
-    Check the validity of the movement via:
+    Return whether the movemment is legal or not via:
 
     1. Not sharing the same row.
     2. Not sharing the same diagonal.
 
     Expects:
-        queens: list containing the row of each queen.
-                The column corresponds to the index.
-        move: tuple (column, row).
+        assignment: dict with the proposal of arangement
     """
+    # Edge case , empty assignment
+    if assignment == {}:
+        return True
 
-    move_column = move[0]
-    move_row = move[1]
+    # To avoid coputations and explot python dicts
 
-    for queen_column in range(len(queens)):
-        queen_row = queens[queen_column]
+    move_column = next(reversed(assignment))
+    move_row = assignment[move_column]
+
+    for queen_column in assignment.keys() - {move_column}:
+        queen_row = assignment[queen_column]
 
         # Check if they share the same row.
         if move_row == queen_row:
@@ -43,33 +58,28 @@ def check_movement(queens, move):
     return True
 
 
-def backtrack(positions):
-    queen_column = len(positions)
+def build_nqueens_csp(n: int) -> CSP:
+    """generic builder of nqueens csp
 
-    # If we placed all the queens, we found a solution.
-    if queen_column == N:
-        print("Solution:", positions)
-        return True
+    Args:
+        n (int): number of queens
 
-    # Try every row in the current column.
-    for queen_row in range(N):
-        move = (queen_column, queen_row)
+    Returns:
+        CSP: Nqueens CSP object
+    """
+    COLUMNS = tuple(range(n))
+    ROWS = tuple(range(n))
+    DOMAINS = {column: ROWS for column in COLUMNS}
 
-        if check_movement(positions, move):
-            # Make the movement.
-            positions.append(queen_row)
-
-            # Try to place the next queen.
-            solution_found = backtrack(positions)
-
-            if solution_found:
-                return True
-
-            # Undo the movement and try another row.
-            positions.pop()
-
-    # No row worked for the current column.
-    return False
+    return CSP(
+        variables=COLUMNS,
+        domains=DOMAINS,
+        is_consistent=constraint_satisfaction,
+    )
 
 
-backtrack(positions)
+# Used only for tests
+
+four_queens_csp = CSP(
+    variables=COLUMNS, domains=DOMAINS, is_consistent=constraint_satisfaction
+)

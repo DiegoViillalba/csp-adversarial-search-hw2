@@ -7,6 +7,7 @@ src/problems/graph_coloring.py's solve_backtracking/solve_metaheuristic, so
 experiments/compare_coloring.py can call all three the same way and the
 minimum feasible k found by each method is directly comparable.
 """
+
 from __future__ import annotations
 
 import time
@@ -27,7 +28,9 @@ def solve_coloring_ortools(
     from a timeout (INFEASIBLE vs UNKNOWN).
     """
     model = cp_model.CpModel()
-    color = [model.NewIntVar(0, k - 1, f"color_{v}") for v in range(num_vertices)]
+    color = [
+        model.NewIntVar(0, k - 1, f"color_{v}") for v in range(num_vertices)
+    ]
 
     for u, v in edges:
         model.Add(color[u] != color[v])
@@ -38,7 +41,11 @@ def solve_coloring_ortools(
     status = solver.Solve(model)
     elapsed = time.perf_counter() - start
 
-    stats = {"status": solver.StatusName(status), "time_seconds": elapsed, "k": k}
+    stats = {
+        "status": solver.StatusName(status),
+        "time_seconds": elapsed,
+        "k": k,
+    }
 
     if status in (cp_model.OPTIMAL, cp_model.FEASIBLE):
         coloring = {v: solver.Value(color[v]) for v in range(num_vertices)}
@@ -57,8 +64,14 @@ def find_min_colors_ortools(
     coloring, stopping at the first feasible k found. `time_limit_seconds`
     applies to EACH k tried, not to the whole search."""
     for k in range(k_min, k_max + 1):
-        coloring, stats = solve_coloring_ortools(num_vertices, edges, k, time_limit_seconds)
+        coloring, stats = solve_coloring_ortools(
+            num_vertices, edges, k, time_limit_seconds
+        )
         if coloring is not None:
             stats["k_min_tried"], stats["k_max_tried"] = k_min, k
             return coloring, stats
-    return None, {"status": "NO_FEASIBLE_K_IN_RANGE", "k_min_tried": k_min, "k_max_tried": k_max}
+    return None, {
+        "status": "NO_FEASIBLE_K_IN_RANGE",
+        "k_min_tried": k_min,
+        "k_max_tried": k_max,
+    }

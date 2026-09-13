@@ -1,4 +1,9 @@
-from src.utils.graph_io import generate_random_graph, read_graph, write_coloring, write_graph
+from src.utils.graph_io import (
+    generate_random_graph,
+    read_graph,
+    write_coloring,
+    write_graph,
+)
 
 
 def test_write_then_read_graph_roundtrips(tmp_path):

@@ -8,6 +8,7 @@ Expects src/problems/nqueens.py to expose:
     count_conflicts(positions) -> int
 See README.md ("Interfaces esperadas") for the full contract.
 """
+
 from __future__ import annotations
 
 from _common import load_config, results_path
@@ -31,19 +32,31 @@ def main() -> None:
             time_limit_seconds=config["backtracking"]["time_limit_seconds"],
         )
         if positions_bt is not None:
-            assert is_valid_nqueens_solution(positions_bt), "backtracking returned an invalid solution"
+            assert is_valid_nqueens_solution(positions_bt), (
+                "backtracking returned an invalid solution"
+            )
         append_result_csv(csv_path, stats_bt)
         save_solution_json(
-            results_path("solutions", f"nqueens_{n}_backtracking.json"), positions_bt, stats_bt
+            results_path("solutions", f"nqueens_{n}_backtracking.json"),
+            positions_bt,
+            stats_bt,
         )
-        print(f"[n={n}] backtracking: solved={stats_bt.solved} time={stats_bt.time_seconds:.3f}s")
+        print(
+            f"[n={n}] backtracking: solved={stats_bt.solved} time={stats_bt.time_seconds:.3f}s"
+        )
 
-        positions_sa, stats_sa = nqueens.solve_metaheuristic(n, seed=config["seed"], **config["metaheuristic"])
+        positions_sa, stats_sa = nqueens.solve_metaheuristic(
+            n, seed=config["seed"], **config["metaheuristic"]
+        )
         if nqueens.count_conflicts(positions_sa) == 0:
-            assert is_valid_nqueens_solution(positions_sa), "0 conflicts reported but solution is invalid"
+            assert is_valid_nqueens_solution(positions_sa), (
+                "0 conflicts reported but solution is invalid"
+            )
         append_result_csv(csv_path, stats_sa)
         save_solution_json(
-            results_path("solutions", f"nqueens_{n}_metaheuristic.json"), positions_sa, stats_sa
+            results_path("solutions", f"nqueens_{n}_metaheuristic.json"),
+            positions_sa,
+            stats_sa,
         )
         print(
             f"[n={n}] metaheuristic: solved={stats_sa.solved} "

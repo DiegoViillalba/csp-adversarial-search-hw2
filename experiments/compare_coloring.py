@@ -6,12 +6,17 @@ Reuses find_min_k_backtracking/find_min_k_metaheuristic from run_graph_coloring.
 so the k-search loop isn't duplicated. Nothing to implement here — this file
 is glue over things you've already written plus src/integrations/ortools_coloring.py.
 """
+
 from __future__ import annotations
 
 import csv
 
 from _common import load_config, results_path
-from run_graph_coloring import ensure_instance, find_min_k_backtracking, find_min_k_metaheuristic
+from run_graph_coloring import (
+    ensure_instance,
+    find_min_k_backtracking,
+    find_min_k_metaheuristic,
+)
 
 from src.integrations.ortools_coloring import find_min_colors_ortools
 from src.utils.random_seed import set_seed
@@ -27,13 +32,26 @@ def main() -> None:
         name = instance["name"]
 
         k_bt, _, stats_bt = find_min_k_backtracking(
-            num_vertices, edges, config["k_min"], config["k_max"], **config["backtracking"]
+            num_vertices,
+            edges,
+            config["k_min"],
+            config["k_max"],
+            **config["backtracking"],
         )
         k_sa, _, stats_sa = find_min_k_metaheuristic(
-            num_vertices, edges, config["k_min"], config["k_max"], config["seed"], **config["metaheuristic"]
+            num_vertices,
+            edges,
+            config["k_min"],
+            config["k_max"],
+            config["seed"],
+            **config["metaheuristic"],
         )
         _, stats_or = find_min_colors_ortools(
-            num_vertices, edges, config["k_min"], config["k_max"], config["ortools"]["time_limit_seconds"]
+            num_vertices,
+            edges,
+            config["k_min"],
+            config["k_max"],
+            config["ortools"]["time_limit_seconds"],
         )
 
         row = {

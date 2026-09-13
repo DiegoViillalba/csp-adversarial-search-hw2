@@ -9,6 +9,7 @@ Expects src/problems/nqueens.py to expose:
     where stats.extra["exhaustive"] is True iff the search finished on its
     own (not cut off by max_solutions/time_limit_seconds).
 """
+
 from __future__ import annotations
 
 from _common import load_config, results_path
@@ -27,11 +28,15 @@ def main() -> None:
         time_limit_seconds=config["time_limit_seconds"],
     )
 
-    assert all(is_valid_nqueens_solution(s) for s in solutions), "an enumerated solution is invalid"
+    assert all(is_valid_nqueens_solution(s) for s in solutions), (
+        "an enumerated solution is invalid"
+    )
 
     append_result_csv(results_path("tables", "nqueens_enumeration.csv"), stats)
     save_solution_json(
-        results_path("solutions", f"nqueens_{config['n']}_all_solutions.json"), solutions, stats
+        results_path("solutions", f"nqueens_{config['n']}_all_solutions.json"),
+        solutions,
+        stats,
     )
 
     print(

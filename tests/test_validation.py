@@ -1,5 +1,6 @@
 """Example of the testing pattern for this project — mirror this for your
 own tests/test_backtracking.py, test_ac3.py, test_minimax.py, etc."""
+
 from src.utils.validation import is_valid_coloring, is_valid_nqueens_solution
 
 

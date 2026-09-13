@@ -8,6 +8,7 @@ Expects src/problems/tic_tac_toe.py to expose:
     env_kwargs is passed to src.integrations.gym_tic_tac_toe.make_env.
 See README.md ("Interfaces esperadas") for the full contract.
 """
+
 from __future__ import annotations
 
 import json

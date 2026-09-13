@@ -58,17 +58,27 @@ Usa `src.utils.metrics.SearchStats` y `src.utils.metrics.timer()` dentro de tus 
 ### `src/problems/nqueens.py`
 
 ```python
-def solve_backtracking(n: int, use_forward_checking: bool, use_ac3: bool,
-                        time_limit_seconds: float | None) -> tuple[list[int] | None, SearchStats]:
+def solve_backtracking(
+    n: int,
+    use_forward_checking: bool,
+    use_ac3: bool,
+    time_limit_seconds: float | None,
+) -> tuple[list[int] | None, SearchStats]:
     """positions[col] = row. None si no se encontró solución (o se agotó el tiempo)."""
 
-def solve_metaheuristic(n: int, seed: int | None, **params) -> tuple[list[int], SearchStats]:
+
+def solve_metaheuristic(
+    n: int, seed: int | None, **params
+) -> tuple[list[int], SearchStats]:
     """Mejor asignación encontrada (puede tener conflictos — revisa stats.objective)."""
 
-def enumerate_solutions(n: int, max_solutions: int | None,
-                         time_limit_seconds: float | None) -> tuple[list[list[int]], SearchStats]:
+
+def enumerate_solutions(
+    n: int, max_solutions: int | None, time_limit_seconds: float | None
+) -> tuple[list[list[int]], SearchStats]:
     """Todas las soluciones encontradas hasta el primer límite alcanzado.
     stats.extra["exhaustive"]: bool, si la búsqueda terminó sola o fue cortada."""
+
 
 def count_conflicts(positions: list[int]) -> int:
     """Pares de reinas atacándose — tu función objetivo."""
@@ -77,17 +87,31 @@ def count_conflicts(positions: list[int]) -> int:
 ### `src/problems/graph_coloring.py`
 
 ```python
-def solve_backtracking(num_vertices: int, edges: list[tuple[int,int]], k: int,
-                        use_forward_checking: bool, use_ac3: bool,
-                        time_limit_seconds: float | None) -> tuple[dict[int,int] | None, SearchStats]:
+def solve_backtracking(
+    num_vertices: int,
+    edges: list[tuple[int, int]],
+    k: int,
+    use_forward_checking: bool,
+    use_ac3: bool,
+    time_limit_seconds: float | None,
+) -> tuple[dict[int, int] | None, SearchStats]:
     """Coloreado propio con k colores, o None si es infactible / se agota el tiempo."""
 
-def solve_metaheuristic(num_vertices: int, edges: list[tuple[int,int]], k: int,
-                         seed: int | None, **params) -> tuple[dict[int,int], SearchStats]:
+
+def solve_metaheuristic(
+    num_vertices: int,
+    edges: list[tuple[int, int]],
+    k: int,
+    seed: int | None,
+    **params,
+) -> tuple[dict[int, int], SearchStats]:
     """Mejor coloreado encontrado usando exactamente k colores (puede tener
     conflictos — revisa stats.objective)."""
 
-def count_conflicts(edges: list[tuple[int,int]], coloring: dict[int,int]) -> int:
+
+def count_conflicts(
+    edges: list[tuple[int, int]], coloring: dict[int, int]
+) -> int:
     """Aristas con extremos del mismo color — tu función objetivo."""
 ```
 
@@ -96,8 +120,13 @@ def count_conflicts(edges: list[tuple[int,int]], coloring: dict[int,int]) -> int
 ### `src/problems/tic_tac_toe.py`
 
 ```python
-def play_game(agent_x: str, agent_o: str, env_kwargs: dict | None, seed: int | None,
-               render: bool) -> dict:
+def play_game(
+    agent_x: str,
+    agent_o: str,
+    env_kwargs: dict | None,
+    seed: int | None,
+    render: bool,
+) -> dict:
     """agent_x/agent_o en {"minimax", "alpha_beta", "random"}.
     env_kwargs se pasa a src.integrations.gym_tic_tac_toe.make_env(**env_kwargs).
     Devuelve {"moves": [...], "winner": int | None, "board_history": [...]}."""
