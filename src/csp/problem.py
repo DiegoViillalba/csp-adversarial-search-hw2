@@ -34,10 +34,7 @@ class CSP:
     """
 
     def __init__(
-        self,
-        variables: tuple,
-        domains: dict,
-        is_consistent: Callable
+        self, variables: tuple, domains: dict, is_consistent: Callable
     ) -> None:
         """Build a CSP.
 

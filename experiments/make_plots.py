@@ -58,16 +58,23 @@ def plot_nqueens_time() -> None:
     sizes = sorted({int(r["instance_size"]) for r in rows})
     bt_times = [
         next(
-            (float(r["time_seconds"]) for r in rows if int(r["instance_size"]) == n
-             and r["method"].startswith("backtracking")),
+            (
+                float(r["time_seconds"])
+                for r in rows
+                if int(r["instance_size"]) == n
+                and r["method"].startswith("backtracking")
+            ),
             None,
         )
         for n in sizes
     ]
     sa_times = [
         next(
-            (float(r["time_seconds"]) for r in rows if int(r["instance_size"]) == n
-             and r["method"] == "simulated_annealing"),
+            (
+                float(r["time_seconds"])
+                for r in rows
+                if int(r["instance_size"]) == n and r["method"] == "simulated_annealing"
+            ),
             None,
         )
         for n in sizes
@@ -94,16 +101,23 @@ def plot_graph_coloring_time() -> None:
     sizes = sorted({int(r["instance_size"]) for r in rows})
     bt_times = [
         next(
-            (float(r["time_seconds"]) for r in rows if int(r["instance_size"]) == n
-             and r["method"].startswith("backtracking")),
+            (
+                float(r["time_seconds"])
+                for r in rows
+                if int(r["instance_size"]) == n
+                and r["method"].startswith("backtracking")
+            ),
             None,
         )
         for n in sizes
     ]
     sa_times = [
         next(
-            (float(r["time_seconds"]) for r in rows if int(r["instance_size"]) == n
-             and r["method"] == "simulated_annealing"),
+            (
+                float(r["time_seconds"])
+                for r in rows
+                if int(r["instance_size"]) == n and r["method"] == "simulated_annealing"
+            ),
             None,
         )
         for n in sizes
@@ -140,7 +154,9 @@ def plot_coloring_comparison() -> None:
         fig, ax = plt.subplots()
         for i, (method, label) in enumerate(zip(methods, labels)):
             values = [
-                float(r[f"{metric}_{method}"]) if r[f"{metric}_{method}"] not in ("", "None") else None
+                float(r[f"{metric}_{method}"])
+                if r[f"{metric}_{method}"] not in ("", "None")
+                else None
                 for r in rows
             ]
             offset = (i - 1) * width
@@ -155,10 +171,22 @@ def plot_coloring_comparison() -> None:
 
 def plot_sa_convergence() -> None:
     targets = [
-        ("nqueens_8_metaheuristic.json", "N-reinas N=8: convergencia del recocido simulado"),
-        ("nqueens_100_metaheuristic.json", "N-reinas N=100: convergencia del recocido simulado"),
-        ("coloring_small_metaheuristic.json", "Coloreado 50 nodos: convergencia del recocido simulado"),
-        ("coloring_large_metaheuristic.json", "Coloreado 1000 nodos: convergencia del recocido simulado"),
+        (
+            "nqueens_8_metaheuristic.json",
+            "N-reinas N=8: convergencia del recocido simulado",
+        ),
+        (
+            "nqueens_100_metaheuristic.json",
+            "N-reinas N=100: convergencia del recocido simulado",
+        ),
+        (
+            "coloring_small_metaheuristic.json",
+            "Coloreado 50 nodos: convergencia del recocido simulado",
+        ),
+        (
+            "coloring_large_metaheuristic.json",
+            "Coloreado 1000 nodos: convergencia del recocido simulado",
+        ),
     ]
     for filename, title in targets:
         data = _read_json(results_path("solutions", filename))

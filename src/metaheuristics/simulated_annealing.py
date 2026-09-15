@@ -51,7 +51,6 @@ def count_conflicts(problem: CSP, assignment: dict) -> int:
     """
     conflicts = 0
 
-
     if problem.neighbors:
         for v in problem.variables:
             for n in problem.neighbors[v]:
@@ -62,20 +61,18 @@ def count_conflicts(problem: CSP, assignment: dict) -> int:
                         conflicts += 1
 
     else:
-
         for i, xi in enumerate(problem.variables):
             for xj in problem.variables[i + 1 :]:
-                
                 pair = {xi: assignment[xi], xj: assignment[xj]}
-                
+
                 if not problem.is_consistent(pair):
                     conflicts += 1
-
 
     return conflicts
 
 
 # NOTE: This implementation was realized after the previous one
+
 
 def conflicts_for_variable(problem: CSP, assignment: dict, variable) -> int:
     """Count conflicts involving just `variable`, under its CURRENT value in
@@ -109,7 +106,6 @@ def conflicts_for_variable(problem: CSP, assignment: dict, variable) -> int:
     return conflicts
 
 
-
 # ___ Schedulers _____
 
 """
@@ -117,7 +113,10 @@ The idea of using scheulers came from my understanding of SGD, where we can defi
 some scheduler
 """
 
-def geometric_schedule(iteration: int, initial_temperature: float, cooling_rate: float) -> float:
+
+def geometric_schedule(
+    iteration: int, initial_temperature: float, cooling_rate: float
+) -> float:
     """T(t) = T0 * cooling_rate^t -- multiplicative cooling (Kirkpatrick et al.'s
     original schedule). This project's default so far. Monotonically decreasing:
     once cold, it never warms back up.
@@ -125,7 +124,9 @@ def geometric_schedule(iteration: int, initial_temperature: float, cooling_rate:
     return initial_temperature * (cooling_rate**iteration)
 
 
-def exponential_schedule(iteration: int, initial_temperature: float, cooling_rate: float) -> float:
+def exponential_schedule(
+    iteration: int, initial_temperature: float, cooling_rate: float
+) -> float:
     """T(t) = T0 * exp(-cooling_rate * t) -- continuous exponential decay.
 
     Looks similar to geometric_schedule but `cooling_rate` means something
@@ -138,7 +139,9 @@ def exponential_schedule(iteration: int, initial_temperature: float, cooling_rat
     return initial_temperature * math.exp(-cooling_rate * iteration)
 
 
-def sinusoidal_schedule(iteration: int, initial_temperature: float, cooling_rate: float) -> float:
+def sinusoidal_schedule(
+    iteration: int, initial_temperature: float, cooling_rate: float
+) -> float:
     """T(t) = T0 * exp(-cooling_rate * t) * (0.5 + 0.5*cos(cooling_rate * t)).
 
     Same decaying envelope as exponential_schedule, modulated by a cosine so
@@ -180,8 +183,7 @@ def random_neighbor(problem: CSP, assignment: dict, rng: random.Random) -> tuple
     current_value = assignment[random_variable]
 
     elegible_values = [
-        v for v in problem.domains[random_variable]
-        if v != current_value
+        v for v in problem.domains[random_variable] if v != current_value
     ]
 
     if not elegible_values:
@@ -198,9 +200,8 @@ def random_neighbor(problem: CSP, assignment: dict, rng: random.Random) -> tuple
     return assignment, (random_variable, current_value), delta
 
 
-
-
 # ____ Main implementation ______
+
 
 def simulated_annealing(
     problem: CSP,
@@ -265,7 +266,9 @@ def simulated_annealing(
         ):
             break
 
-        temperature = max(scheduler(iteration, initial_temperature, cooling_rate), 1e-10)
+        temperature = max(
+            scheduler(iteration, initial_temperature, cooling_rate), 1e-10
+        )
 
         current, old_state, delta = random_neighbor(problem, current, rng)
 
@@ -289,6 +292,3 @@ def simulated_annealing(
         iteration += 1
 
     return best, best_cost, energy_history
-
-
-        

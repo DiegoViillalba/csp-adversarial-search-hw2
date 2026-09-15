@@ -13,6 +13,7 @@ from src.csp.problem import CSP
 from src.metaheuristics.simulated_annealing import simulated_annealing
 from src.utils.graph_io import generate_random_graph
 from src.utils.metrics import SearchStats, timer
+from src.utils.recursion import deeper_recursion
 from src.utils.timeout import time_limit
 
 # _____ Constants for the test problem. _____
@@ -137,7 +138,7 @@ def solve_backtracking(
     solution = None
     with timer() as elapsed:
         try:
-            with time_limit(time_limit_seconds):
+            with time_limit(time_limit_seconds), deeper_recursion(num_vertices + 200):
                 solution = backtrack(
                     problem,
                     {},
@@ -180,7 +181,9 @@ def solve_metaheuristic(
     problem = build_graph_coloring_csp(num_vertices, edges, k)
 
     with timer() as elapsed:
-        assignment, cost, energy_history = simulated_annealing(problem, seed=seed, **params)
+        assignment, cost, energy_history = simulated_annealing(
+            problem, seed=seed, **params
+        )
 
     stats = SearchStats(
         method="simulated_annealing",
