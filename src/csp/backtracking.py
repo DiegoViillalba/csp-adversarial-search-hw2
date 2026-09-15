@@ -39,8 +39,20 @@ def backtrack(
     heuristic: Callable | None = None,
     value_order: Callable | None = None,
     forward_checking: bool = False,
+    node_counter: list[int] | None = None,
 ) -> dict | None:
-    """Return a complete consistent assignment, or ``None`` if none exists."""
+    """Return a complete consistent assignment, or ``None`` if none exists.
+
+    node_counter, if given, is a one-element list incremented once per
+    call -- i.e. once per node/state visited in the search tree. A list
+    (not an int) because ints are immutable in Python: passing one down
+    the recursion wouldn't let child calls update the caller's copy. None
+    (the default) skips counting entirely, so callers that don't care
+    about this pay no extra cost.
+    """
+
+    if node_counter is not None:
+        node_counter[0] += 1
 
     if not problem.is_consistent(assignment):
         return None
@@ -76,7 +88,7 @@ def backtrack(
                 continue
 
         result = backtrack(
-            problem, assignment, heuristic, value_order, forward_checking
+            problem, assignment, heuristic, value_order, forward_checking, node_counter
         )
         if result is not None:
             return result

@@ -14,6 +14,7 @@ from src.metaheuristics.simulated_annealing import simulated_annealing
 from src.utils.graph_io import generate_random_graph
 from src.utils.metrics import SearchStats, timer
 from src.utils.recursion import deeper_recursion
+from src.utils.resources import peak_memory_mb
 from src.utils.timeout import time_limit
 
 # _____ Constants for the test problem. _____
@@ -136,6 +137,7 @@ def solve_backtracking(
 
     timed_out = False
     solution = None
+    node_counter = [0]
     with timer() as elapsed:
         try:
             with time_limit(time_limit_seconds), deeper_recursion(num_vertices + 200):
@@ -145,6 +147,7 @@ def solve_backtracking(
                     heuristic=mrv,
                     value_order=lcv,
                     forward_checking=use_forward_checking,
+                    node_counter=node_counter,
                 )
         except TimeoutError:
             timed_out = True
@@ -163,8 +166,9 @@ def solve_backtracking(
         instance_size=num_vertices,
         solved=coloring is not None,
         objective=0 if coloring is not None else None,
+        nodes_expanded=node_counter[0],
         time_seconds=elapsed(),
-        extra={"k": k, "timed_out": timed_out},
+        extra={"k": k, "timed_out": timed_out, "peak_memory_mb": peak_memory_mb()},
     )
     return coloring, stats
 
@@ -195,6 +199,7 @@ def solve_metaheuristic(
         extra={
             "k": k,
             "energy_history": energy_history,
+            "peak_memory_mb": peak_memory_mb(),
             **{k_: v for k_, v in params.items() if k_ != "time_limit_seconds"},
         },
     )

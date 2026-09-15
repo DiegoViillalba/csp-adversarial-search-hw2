@@ -10,11 +10,18 @@ found feasible for this instance) rather than searching k_min..k_max, so
 the whole time budget goes into a single, known-feasible attempt instead
 of being split across up to 11 values of k.
 
+Records not just wall-clock time but nodes_expanded (one per backtrack()
+call, see src/csp/backtracking.py's node_counter param) and
+stats.extra["peak_memory_mb"] (whole-process peak RSS, see
+src/utils/resources.py), so there's something to evaluate beyond "did it
+finish": how many states/second naive backtracking manages here vs. the
+FC+AC3 run, and whether it's memory or time that runs out first.
+
 TIME_LIMIT_SECONDS is hardcoded here rather than read from
 configs/graph_coloring.yaml on purpose: that config is shared with the
 regular, fast pipeline (run_graph_coloring.py / compare_coloring.py /
 scripts/run_remote_heavy.sh), and bumping it there would make every
-normal run take up to 55 hours too.
+normal run take up to 6 hours too.
 
 Writes to *_overnight.csv/.json filenames so this never collides with or
 overwrites results/tables/graph_coloring.csv from the regular run.
@@ -29,7 +36,7 @@ from src.problems import graph_coloring
 from src.utils.metrics import append_result_csv, save_solution_json
 from src.utils.validation import is_valid_coloring
 
-TIME_LIMIT_SECONDS = 55 * 3600  # 55 horas
+TIME_LIMIT_SECONDS = 6 * 3600  # 6 horas
 K = 8
 
 
@@ -60,7 +67,9 @@ def main() -> None:
 
     print(
         f"k={K} (naive, sin FC/AC3): solved={stats.solved} "
-        f"time={stats.time_seconds:.2f}s"
+        f"time={stats.time_seconds:.2f}s "
+        f"nodes_expanded={stats.nodes_expanded} "
+        f"peak_memory_mb={stats.extra.get('peak_memory_mb'):.1f}"
     )
 
 

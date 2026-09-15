@@ -142,11 +142,13 @@ corrieron en un servidor remoto para no ocupar la laptop mientras tanto:
 
 `scripts/run_remote_overnight.sh` deja corriendo, en este orden, `compare_schedulers.py` (rápido,
 asegura esos resultados primero) y luego dos corridas de presupuesto mucho más grande para ver
-hasta dónde da el servidor: `enumerate_nqueens_overnight.py` (N=100, 5 horas) y
+hasta dónde da el servidor: `enumerate_nqueens_overnight.py` (N=100, 6 horas) y
 `run_graph_coloring_overnight.py` (coloreado de 1000 nodos, k=8, **sin** forward checking ni AC3,
-55 horas — contraste directo contra la versión con heurísticas, que resuelve el mismo k en
-~8.5s). Ambas escriben en archivos `*_overnight.*` separados, así que nunca pisan los resultados
-de la corrida normal.
+6 horas — contraste directo contra la versión con heurísticas, que resuelve el mismo k en
+~8.5s). Ambas registran, además del tiempo, `nodes_expanded` (nodos del árbol de búsqueda
+visitados) y `stats.extra["peak_memory_mb"]` (memoria pico del proceso), para poder evaluar el
+límite real de cómputo y no solo si terminaron. Escriben en archivos `*_overnight.*` separados,
+así que nunca pisan los resultados de la corrida normal.
 
 ### Sobre "encontrar todas las soluciones para N=100"
 

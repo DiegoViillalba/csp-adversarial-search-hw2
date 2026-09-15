@@ -15,6 +15,7 @@ from src.csp.problem import CSP
 from src.metaheuristics.simulated_annealing import simulated_annealing
 from src.utils.metrics import SearchStats, timer
 from src.utils.recursion import deeper_recursion
+from src.utils.resources import peak_memory_mb
 from src.utils.timeout import time_limit
 
 # _____ Constants in the test problem _____
@@ -138,6 +139,7 @@ def solve_backtracking(
 
     timed_out = False
     solution = None
+    node_counter = [0]
     with timer() as elapsed:
         try:
             with time_limit(time_limit_seconds), deeper_recursion(n + 200):
@@ -147,6 +149,7 @@ def solve_backtracking(
                     heuristic=mrv,
                     value_order=lcv,
                     forward_checking=use_forward_checking,
+                    node_counter=node_counter,
                 )
         except TimeoutError:
             timed_out = True
@@ -165,8 +168,9 @@ def solve_backtracking(
         instance_size=n,
         solved=positions is not None,
         objective=0 if positions is not None else None,
+        nodes_expanded=node_counter[0],
         time_seconds=elapsed(),
-        extra={"timed_out": timed_out},
+        extra={"timed_out": timed_out, "peak_memory_mb": peak_memory_mb()},
     )
     return positions, stats
 
@@ -193,6 +197,7 @@ def solve_metaheuristic(
         time_seconds=elapsed(),
         extra={
             "energy_history": energy_history,
+            "peak_memory_mb": peak_memory_mb(),
             **{k: v for k, v in params.items() if k != "time_limit_seconds"},
         },
     )
@@ -218,6 +223,7 @@ def enumerate_solutions(
     assignment: dict[int, int] = {}
     start = time.perf_counter()
     exhaustive = True
+    nodes_expanded = 0
 
     def limit_reached() -> bool:
         nonlocal exhaustive
@@ -233,6 +239,8 @@ def enumerate_solutions(
         return False
 
     def place(col: int) -> None:
+        nonlocal nodes_expanded
+        nodes_expanded += 1
         if limit_reached():
             return
         if col == n:
@@ -254,7 +262,12 @@ def enumerate_solutions(
         instance_size=n,
         solved=len(solutions) > 0,
         objective=len(solutions),
+        nodes_expanded=nodes_expanded,
         time_seconds=time.perf_counter() - start,
-        extra={"exhaustive": exhaustive, "max_solutions": max_solutions},
+        extra={
+            "exhaustive": exhaustive,
+            "max_solutions": max_solutions,
+            "peak_memory_mb": peak_memory_mb(),
+        },
     )
     return solutions, stats
