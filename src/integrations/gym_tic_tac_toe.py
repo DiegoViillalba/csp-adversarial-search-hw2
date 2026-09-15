@@ -81,3 +81,10 @@ def is_terminal(env: TictactoeEnv) -> bool:
 
 def other_player(player: int) -> int:
     return PLAYER_O if player == PLAYER_X else PLAYER_X
+
+
+# ____ Validations _____
+def print_board(env):
+    chars = {0: " ", PLAYER_X: "X", PLAYER_O: "O"}
+    for row in get_board(env):
+        print("|" + "|".join(chars[cell] for cell in row) + "|")
