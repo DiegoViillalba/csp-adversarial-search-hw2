@@ -177,7 +177,7 @@ def solve_metaheuristic(
     problem = build_nqueens_csp(n)
 
     with timer() as elapsed:
-        assignment, cost = simulated_annealing(problem, seed=seed, **params)
+        assignment, cost, energy_history = simulated_annealing(problem, seed=seed, **params)
 
     positions = [assignment[col] for col in range(n)]
 
@@ -188,7 +188,10 @@ def solve_metaheuristic(
         solved=cost == 0,
         objective=cost,
         time_seconds=elapsed(),
-        extra={k: v for k, v in params.items() if k != "time_limit_seconds"},
+        extra={
+            "energy_history": energy_history,
+            **{k: v for k, v in params.items() if k != "time_limit_seconds"},
+        },
     )
     return positions, stats
 

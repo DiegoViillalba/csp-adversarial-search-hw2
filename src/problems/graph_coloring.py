@@ -180,7 +180,7 @@ def solve_metaheuristic(
     problem = build_graph_coloring_csp(num_vertices, edges, k)
 
     with timer() as elapsed:
-        assignment, cost = simulated_annealing(problem, seed=seed, **params)
+        assignment, cost, energy_history = simulated_annealing(problem, seed=seed, **params)
 
     stats = SearchStats(
         method="simulated_annealing",
@@ -191,6 +191,7 @@ def solve_metaheuristic(
         time_seconds=elapsed(),
         extra={
             "k": k,
+            "energy_history": energy_history,
             **{k_: v for k_, v in params.items() if k_ != "time_limit_seconds"},
         },
     )

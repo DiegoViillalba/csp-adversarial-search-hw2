@@ -6,19 +6,18 @@ accepts worsening moves with a probability that shrinks as the
 "temperature" cools, so it can escape local minima early on and settles
 into one late on.
 
-NOTE: count_conflicts is O(num_variables^2) per call since CSP has no
-explicit neighbor structure to restrict the pairwise check to. On the
-1000-node coloring instance this means fewer iterations complete within a
-given time budget than a version with an incremental, neighbor-aware delta
-would manage. Left as-is given the time we have; time_limit_seconds keeps
-it from running forever.
+NOTE: Main resource consulted:
+
+https://smartmobilityalgorithms.github.io/book/content/TrajectoryAlgorithms/SimulatedAnnealing.html
 """
 
 import math
 import random
 import time
 
+from collections.abc import Callable
 from src.csp.problem import CSP
+
 
 # ____ Helper Functions ____
 
@@ -110,6 +109,50 @@ def conflicts_for_variable(problem: CSP, assignment: dict, variable) -> int:
     return conflicts
 
 
+
+# ___ Schedulers _____
+
+"""
+The idea of using scheulers came from my understanding of SGD, where we can define
+some scheduler
+"""
+
+def geometric_schedule(iteration: int, initial_temperature: float, cooling_rate: float) -> float:
+    """T(t) = T0 * cooling_rate^t -- multiplicative cooling (Kirkpatrick et al.'s
+    original schedule). This project's default so far. Monotonically decreasing:
+    once cold, it never warms back up.
+    """
+    return initial_temperature * (cooling_rate**iteration)
+
+
+def exponential_schedule(iteration: int, initial_temperature: float, cooling_rate: float) -> float:
+    """T(t) = T0 * exp(-cooling_rate * t) -- continuous exponential decay.
+
+    Looks similar to geometric_schedule but `cooling_rate` means something
+    different here: it's a decay RATE, not a per-step multiplier, so the
+    same numeric value cools much faster here than in geometric_schedule
+    (e.g. cooling_rate=0.995 barely cools geometrically over 1000 steps,
+    but decays exponential_schedule to near-zero almost immediately --
+    use a much smaller value, like 0.001-0.01, for this one).
+    """
+    return initial_temperature * math.exp(-cooling_rate * iteration)
+
+
+def sinusoidal_schedule(iteration: int, initial_temperature: float, cooling_rate: float) -> float:
+    """T(t) = T0 * exp(-cooling_rate * t) * (0.5 + 0.5*cos(cooling_rate * t)).
+
+    Same decaying envelope as exponential_schedule, modulated by a cosine so
+    temperature periodically bumps back up (a bounded reheat) before
+    resuming its decay, instead of cooling off monotonically. Meant to give
+    the search extra chances to escape a local minimum a purely-decreasing
+    schedule would get stuck in -- at the cost of needing more iterations
+    to fully settle, since it keeps reheating a little on every cycle.
+    """
+    envelope = initial_temperature * math.exp(-cooling_rate * iteration)
+    oscillation = 0.5 + 0.5 * math.cos(cooling_rate * iteration)
+    return envelope * oscillation
+
+
 def random_neighbor(problem: CSP, assignment: dict, rng: random.Random) -> tuple:
     """Move ONE randomly chosen variable to a new value, MUTATING `assignment`
     in place instead of returning a copy (avoids allocating a full extra
@@ -166,7 +209,8 @@ def simulated_annealing(
     max_iterations: int = 100_000,
     time_limit_seconds: float | None = None,
     seed: int | None = None,
-) -> tuple[dict, int]:
+    scheduler: Callable | None = None,
+) -> tuple[dict, int, list[int]]:
     """
     Search for a zero-conflict assignment via simulated annealing. (Recocido
     Simulado). Main refrence:
@@ -176,18 +220,29 @@ def simulated_annealing(
         problem (CSP): CSP object
         initial_temperature (float): starting temperature, higher means more
             tolerance for worsening moves early on
-        cooling_rate (float): multiplies the temperature after every
-            iteration, must be in (0, 1)
+        cooling_rate (float): meaning depends on `scheduler` -- a per-step
+            multiplier for geometric_schedule, a decay rate for
+            exponential_schedule/sinusoidal_schedule. See each schedule's
+            docstring.
         max_iterations (int): hard cap on iterations, in case a 0-conflict
             assignment is never reached
         time_limit_seconds (float | None): wall-clock budget, checked once
             per iteration; None means no time limit
         seed (int | None): random seed, for reproducibility
+        scheduler (Callable | None): (iteration, initial_temperature,
+            cooling_rate) -> temperature. One of geometric_schedule (the
+            default if None), exponential_schedule, or sinusoidal_schedule
+            -- or your own, following the same signature.
 
     Returns:
-        tuple[dict, int]: the best assignment found and its conflict count
-            (0 means a real solution was found, not just the best attempt)
+        tuple[dict, int, list[int]]: the best assignment found, its
+            conflict count (0 means a real solution was found, not just
+            the best attempt), and the "energy" (current_cost) at every
+            iteration -- plot this against its index to compare how
+            different schedulers converge.
     """
+    scheduler = scheduler or geometric_schedule
+
     # rng for  reproducibility
     rng = random.Random(seed)
     start_time = time.perf_counter()
@@ -195,11 +250,12 @@ def simulated_annealing(
     current = random_complete_assignment(problem, rng)
     current_cost = count_conflicts(problem, current)
 
-    # `best` MUST be an independent copy, not `current` itself 
+    # `best` MUST be an independent copy, not `current` itself
     best, best_cost = dict(current), current_cost
-    temperature = initial_temperature
+    energy_history = [current_cost]
 
-    for _ in range(max_iterations):
+    iteration = 0
+    while iteration < max_iterations:
         if best_cost == 0:
             break
 
@@ -209,10 +265,13 @@ def simulated_annealing(
         ):
             break
 
+        temperature = max(scheduler(iteration, initial_temperature, cooling_rate), 1e-10)
 
         current, old_state, delta = random_neighbor(problem, current, rng)
 
         if old_state is None:
+            energy_history.append(current_cost)
+            iteration += 1
             continue
 
         # Metropolis acceptance: always keep improving moves; keep a
@@ -226,9 +285,10 @@ def simulated_annealing(
             variable, old_value = old_state
             current[variable] = old_value
 
-        temperature = max(temperature * cooling_rate, 1e-10)
+        energy_history.append(current_cost)
+        iteration += 1
 
-    return best, best_cost
+    return best, best_cost, energy_history
 
 
         
