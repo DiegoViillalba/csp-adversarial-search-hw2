@@ -18,6 +18,10 @@ set -euo pipefail
 #   disown          # para que sobreviva si se cierra la sesion SSH
 #   tail -f logs/run_all.log     # para ver el progreso
 #
+# IMPORTANTE: antes de correr esto, sube los grafos oficiales de coloreado
+# (data/graphs/ esta en .gitignore, "git pull" no los trae) corriendo, desde
+# la laptop: bash scripts/push_graphs_remote.sh
+#
 # Corre desde la raiz del repo (donde vive este script bajo scripts/).
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
@@ -44,5 +48,6 @@ python experiments/make_plots.py
 echo "Listo. Resultados en results/tables/ y results/solutions/, graficas en report/figures/."
 echo "Traelos de vuelta a la laptop con, por ejemplo:"
 echo '  rsync -avz -e "ssh -p 264" diego@132.248.52.48:~/csp-adversarial-search-hw2/results/ ./results/'
-echo '  rsync -avz -e "ssh -p 264" diego@132.248.52.48:~/csp-adversarial-search-hw2/data/graphs/ ./data/graphs/'
 echo '  rsync -avz -e "ssh -p 264" diego@132.248.52.48:~/csp-adversarial-search-hw2/report/figures/ ./report/figures/'
+# data/graphs/ ya NO se trae de vuelta: son los grafos oficiales que subiste
+# tu con push_graphs_remote.sh, el remoto solo los lee, nunca los modifica.

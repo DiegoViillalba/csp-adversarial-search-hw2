@@ -1,15 +1,17 @@
 # Parameters for experiments/run_graph_coloring.py and experiments/compare_coloring.py
 seed: 42
 
+# Instancias oficiales provistas para la tarea (no generadas: ensure_instance()
+# solo genera un grafo aleatorio si el path no existe todavia, asi que con
+# estos archivos ya en data/graphs/ esa rama nunca se ejecuta). Nombradas
+# gc_50_7 / gc_1000_9 por quien las proveyo -- el sufijo probablemente indica
+# el numero de colores esperado, pero eso lo confirma el propio solver, no se
+# asume aqui.
 instances:
   - name: small
-    num_vertices: 50
-    edge_prob: 0.1
-    path: data/graphs/graph_50.txt
+    path: data/graphs/gc_50_7.txt
   - name: large
-    num_vertices: 1000
-    edge_prob: 0.02
-    path: data/graphs/graph_1000.txt
+    path: data/graphs/gc_1000_9.txt
 
 # k search range: for each instance, try k = k_min..k_max and keep the smallest
 # feasible k found (per method), capped by the time budget below.
