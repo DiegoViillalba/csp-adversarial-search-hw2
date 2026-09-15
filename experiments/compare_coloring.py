@@ -25,6 +25,9 @@ from src.utils.random_seed import set_seed
 def main() -> None:
     config = load_config("graph_coloring")
     set_seed(config["seed"])
+    # Mismo archivo de sweep que run_graph_coloring.py -- las corridas de
+    # ambos scripts se acumulan ahi (append_result_csv nunca sobreescribe).
+    sweep_csv_path = results_path("tables", "graph_coloring_k_sweep.csv")
 
     rows = []
     for instance in config["instances"]:
@@ -36,6 +39,8 @@ def main() -> None:
             edges,
             config["k_min"],
             config["k_max"],
+            sweep_csv_path,
+            f"[{name}/backtracking]",
             **config["backtracking"],
         )
         k_sa, _, stats_sa = find_min_k_metaheuristic(
@@ -44,6 +49,8 @@ def main() -> None:
             config["k_min"],
             config["k_max"],
             config["seed"],
+            sweep_csv_path,
+            f"[{name}/metaheuristic]",
             **config["metaheuristic"],
         )
         _, stats_or = find_min_colors_ortools(

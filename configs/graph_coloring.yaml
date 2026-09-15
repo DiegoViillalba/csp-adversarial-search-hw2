@@ -14,9 +14,17 @@ instances:
     path: data/graphs/gc_1000_9.txt
 
 # k search range: for each instance, try k = k_min..k_max and keep the smallest
-# feasible k found (per method), capped by the time budget below.
-k_min: 2
-k_max: 12
+# feasible k found (per method), capped by the time budget below. Raised from
+# 2-12 after measuring real bounds on the official graphs: gc_50_7 has a
+# clique of size ~10 (k<10 is PROVABLY infeasible) and a greedy coloring
+# using 17 colors (a valid, achievable upper bound); gc_1000_9 has a clique
+# of size ~49 and a greedy coloring using 315 -- ie. its true chromatic
+# number is nowhere near what its filename suggests. 10-70 covers gc_50_7's
+# whole feasible range comfortably; for gc_1000_9 it's a partial probe (its
+# greedy upper bound is 315, out of reach for a full linear sweep here) --
+# see results/tables/graph_coloring_k_sweep.csv for every k actually tried.
+k_min: 10
+k_max: 70
 
 backtracking:
   use_forward_checking: true
