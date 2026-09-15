@@ -3,9 +3,11 @@ set -euo pipefail
 
 # Corre los escenarios PESADOS de la Tarea 2 (N-reinas N=100, enumeracion de
 # todas las soluciones N=100, coloreado de grafos con 1000 nodos, y la
-# comparacion contra OR-Tools) — pensado para el servidor remoto, no la
-# laptop local. Los escenarios livianos (N=8 reinas, 50 nodos) se corren
-# aparte en notebooks/local_results.ipynb.
+# comparacion contra OR-Tools), mas la comparacion exploratoria de
+# schedulers del recocido simulado (no pedida por el enunciado, util para
+# el reporte) — pensado para el servidor remoto, no la laptop local. Los
+# escenarios livianos (N=8 reinas, 50 nodos) se corren aparte en
+# notebooks/local_results.ipynb.
 #
 # tic_tac_toe / minimax / alpha_beta quedan fuera: aun no estan resueltos.
 #
@@ -21,23 +23,26 @@ cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
 mkdir -p logs
 
-echo "[1/4] N-reinas (N=8 y N=100, backtracking + metaheuristica)"
+echo "[1/6] N-reinas (N=8 y N=100, backtracking + metaheuristica)"
 python experiments/run_nqueens.py
 
-echo "[2/4] Enumerar todas las soluciones de N-reinas N=100 (acotado)"
+echo "[2/6] Enumerar todas las soluciones de N-reinas N=100 (acotado)"
 python experiments/enumerate_nqueens.py
 
-echo "[3/4] Coloreado de grafos (50 y 1000 nodos, backtracking + metaheuristica)"
+echo "[3/6] Coloreado de grafos (50 y 1000 nodos, backtracking + metaheuristica)"
 python experiments/run_graph_coloring.py
 
-echo "[4/5] Coloreado de grafos vs. OR-Tools (comparacion de tiempo/calidad)"
+echo "[4/6] Coloreado de grafos vs. OR-Tools (comparacion de tiempo/calidad)"
 python experiments/compare_coloring.py
 
-echo "[5/5] Generar graficas para el reporte"
+echo "[5/6] Comparar schedulers del recocido simulado (exploratorio, no pedido por el enunciado)"
+python experiments/compare_schedulers.py
+
+echo "[6/6] Generar graficas para el reporte"
 python experiments/make_plots.py
 
 echo "Listo. Resultados en results/tables/ y results/solutions/, graficas en report/figures/."
 echo "Traelos de vuelta a la laptop con, por ejemplo:"
-echo '  rsync -avz -e "ssh -p 264" diego@132.248.52.48:~/hw2/results/ ./results/'
-echo '  rsync -avz -e "ssh -p 264" diego@132.248.52.48:~/hw2/data/graphs/ ./data/graphs/'
-echo '  rsync -avz -e "ssh -p 264" diego@132.248.52.48:~/hw2/report/figures/ ./report/figures/'
+echo '  rsync -avz -e "ssh -p 264" diego@132.248.52.48:~/csp-adversarial-search-hw2/results/ ./results/'
+echo '  rsync -avz -e "ssh -p 264" diego@132.248.52.48:~/csp-adversarial-search-hw2/data/graphs/ ./data/graphs/'
+echo '  rsync -avz -e "ssh -p 264" diego@132.248.52.48:~/csp-adversarial-search-hw2/report/figures/ ./report/figures/'

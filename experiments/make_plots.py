@@ -204,11 +204,87 @@ def plot_sa_convergence() -> None:
         _save(fig, filename.replace(".json", "_convergence.png"))
 
 
+SCHEDULER_NAMES = ["geometric", "exponential", "sinusoidal"]
+
+
+def plot_scheduler_convergence() -> None:
+    for problem_name, title in [
+        ("nqueens", "N-reinas N=100: convergencia por scheduler"),
+        ("graph_coloring", "Coloreado 1000 nodos: convergencia por scheduler"),
+    ]:
+        fig, ax = plt.subplots()
+        found_any = False
+        for scheduler_name in SCHEDULER_NAMES:
+            data = _read_json(
+                results_path("solutions", f"schedulers_{problem_name}_{scheduler_name}.json")
+            )
+            if data is None:
+                continue
+            energy = data["stats"]["extra"].get("energy_history")
+            if not energy:
+                continue
+            ax.plot(energy, linewidth=0.8, label=scheduler_name)
+            found_any = True
+
+        if not found_any:
+            plt.close(fig)
+            continue
+
+        ax.set_xlabel("iteracion")
+        ax.set_ylabel("conflictos (energia)")
+        ax.set_title(title)
+        ax.legend()
+        _save(fig, f"schedulers_{problem_name}_convergence.png")
+
+
+def plot_scheduler_time() -> None:
+    rows = _read_csv(results_path("tables", "scheduler_comparison.csv"))
+    if not rows:
+        return
+
+    problems = sorted({r["problem"] for r in rows})
+    for problem_name in problems:
+        problem_rows = [r for r in rows if r["problem"] == problem_name]
+
+        avg_time = []
+        avg_conflicts = []
+        for scheduler_name in SCHEDULER_NAMES:
+            runs = [r for r in problem_rows if r["scheduler"] == scheduler_name]
+            if not runs:
+                avg_time.append(0.0)
+                avg_conflicts.append(0.0)
+                continue
+            avg_time.append(sum(float(r["time_seconds"]) for r in runs) / len(runs))
+            avg_conflicts.append(
+                sum(float(r["final_conflicts"]) for r in runs) / len(runs)
+            )
+
+        x = range(len(SCHEDULER_NAMES))
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(9, 4))
+        ax1.bar(x, avg_time)
+        ax1.set_xticks(list(x))
+        ax1.set_xticklabels(SCHEDULER_NAMES)
+        ax1.set_ylabel("tiempo promedio (s)")
+        ax1.set_title("tiempo")
+
+        ax2.bar(x, avg_conflicts)
+        ax2.set_xticks(list(x))
+        ax2.set_xticklabels(SCHEDULER_NAMES)
+        ax2.set_ylabel("conflictos finales promedio")
+        ax2.set_title("calidad")
+
+        n_seeds = len({r["seed"] for r in problem_rows})
+        fig.suptitle(f"Schedulers ({problem_name}): tiempo vs. calidad, promedio de {n_seeds} seeds")
+        _save(fig, f"schedulers_{problem_name}_time_quality.png")
+
+
 def main() -> None:
     plot_nqueens_time()
     plot_graph_coloring_time()
     plot_coloring_comparison()
     plot_sa_convergence()
+    plot_scheduler_convergence()
+    plot_scheduler_time()
 
 
 if __name__ == "__main__":

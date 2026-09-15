@@ -54,6 +54,8 @@ experiments/          Scripts ejecutables (sin argumentos, leen configs/*.yaml)
   enumerate_nqueens.py      Todas las soluciones de N=100 (acotado, ver abajo)
   run_graph_coloring.py     Coloreado 50 y 1000 nodos, backtracking + metaheurística
   compare_coloring.py        + comparación contra OR-Tools
+  compare_schedulers.py      Exploratorio: geometric/exponential/sinusoidal, tiempo y convergencia
+  make_plots.py               Genera report/figures/*.png a partir de results/
   run_tic_tac_toe.py         ONGOING (depende de src/adversarial/ y src/problems/tic_tac_toe.py)
 
 notebooks/
@@ -107,6 +109,7 @@ python experiments/run_nqueens.py          # N=8 y N=100: backtracking + recocid
 python experiments/enumerate_nqueens.py    # todas las soluciones de N=100 (acotado, ver abajo)
 python experiments/run_graph_coloring.py   # 50 y 1000 nodos: backtracking + recocido simulado
 python experiments/compare_coloring.py     # + comparación contra OR-Tools (tiempo y # colores)
+python experiments/compare_schedulers.py   # exploratorio: geometric/exponential/sinusoidal
 python experiments/make_plots.py           # genera las gráficas del reporte a partir de lo anterior
 ```
 
@@ -129,10 +132,10 @@ corrieron en un servidor remoto para no ocupar la laptop mientras tanto:
 - **Localmente**, `notebooks/local_results.ipynb` corre y muestra los escenarios livianos
   (N=8 reinas, coloreado de 50 nodos) directamente sobre `src/problems/*.py`.
 - **En el remoto**, tras clonar este repo e instalar dependencias, `scripts/run_remote_heavy.sh`
-  corre los cinco comandos de arriba (incluida `make_plots.py`) en background con `nohup` y deja
-  logs en `logs/`. Sus resultados se traen de vuelta con `rsync` a `results/`, `data/graphs/` y
-  `report/figures/`, y se usan igual que si se hubieran generado localmente — ver comentarios
-  dentro del script para el uso exacto.
+  corre los seis comandos de arriba en background con `nohup` y deja logs en `logs/`. Sus
+  resultados se traen de vuelta con `rsync` a `results/`, `data/graphs/` y `report/figures/`, y
+  se usan igual que si se hubieran generado localmente — ver comentarios dentro del script para
+  el uso exacto.
 
 ### Sobre "encontrar todas las soluciones para N=100"
 
