@@ -22,7 +22,7 @@ from src.utils.graph_io import (
     write_coloring,
     write_graph,
 )
-from src.utils.metrics import append_result_csv
+from src.utils.metrics import append_result_csv, save_solution_json
 from src.utils.random_seed import set_seed
 from src.utils.validation import is_valid_coloring
 
@@ -83,6 +83,13 @@ def main() -> None:
                 results_path("solutions", f"coloring_{name}_backtracking.txt"),
                 coloring_bt,
             )
+            # Also as JSON (stats + coloring) alongside the assignment's
+            # required .txt format -- experiments/make_plots.py reads this.
+            save_solution_json(
+                results_path("solutions", f"coloring_{name}_backtracking.json"),
+                coloring_bt,
+                stats_bt,
+            )
         print(f"[{name}] backtracking: min k found = {k_bt}")
 
         k_sa, coloring_sa, stats_sa = find_min_k_metaheuristic(
@@ -99,6 +106,13 @@ def main() -> None:
             write_coloring(
                 results_path("solutions", f"coloring_{name}_metaheuristic.txt"),
                 coloring_sa,
+            )
+            # extra.energy_history (dropped from the CSV, see as_row()) only
+            # survives here -- make_plots.py reads it for convergence plots.
+            save_solution_json(
+                results_path("solutions", f"coloring_{name}_metaheuristic.json"),
+                coloring_sa,
+                stats_sa,
             )
         print(f"[{name}] metaheuristic: min k found = {k_sa}")
 

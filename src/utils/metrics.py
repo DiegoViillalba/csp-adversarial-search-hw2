@@ -49,7 +49,18 @@ class SearchStats:
     def as_row(self) -> dict[str, Any]:
         row = asdict(self)
         extra = row.pop("extra")
-        row.update({f"extra_{k}": v for k, v in extra.items()})
+        # Skip list/dict-valued extras (e.g. simulated_annealing's
+        # energy_history: one float per iteration, easily tens of
+        # thousands of entries) -- not CSV-friendly, and they'd make this
+        # summary table unreadable. Still available via save_solution_json,
+        # which dumps the full dataclass including extra as-is.
+        row.update(
+            {
+                f"extra_{k}": v
+                for k, v in extra.items()
+                if not isinstance(v, (list, dict))
+            }
+        )
         return row
 
 
@@ -75,15 +86,35 @@ def timer() -> Iterator[Callable[[], float]]:
 
 def append_result_csv(path: str | Path, stats: SearchStats) -> None:
     """Append one SearchStats row to a CSV in results/tables/, writing the header
-    the first time the file is created."""
+    the first time the file is created.
+
+    Different methods (e.g. backtracking vs. the metaheuristic) populate
+    different keys of `stats.extra`, so the set of `extra_*` columns can
+    grow between calls. Recomputing fieldnames from just the new row (the
+    previous approach) silently appended rows with a different column count
+    than the header. Instead, this reads back whatever rows already exist,
+    unions their columns with the new row's, and rewrites the file --
+    cheap here since these are small per-experiment summary tables, not a
+    high-frequency log.
+    """
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     row = stats.as_row()
-    file_exists = path.exists()
-    with path.open("a", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=list(row.keys()))
-        if not file_exists:
-            writer.writeheader()
+
+    existing_rows: list[dict[str, Any]] = []
+    fieldnames: list[str] = []
+    if path.exists():
+        with path.open(newline="") as f:
+            existing_rows = list(csv.DictReader(f))
+        if existing_rows:
+            fieldnames = list(existing_rows[0].keys())
+
+    fieldnames += [k for k in row.keys() if k not in fieldnames]
+
+    with path.open("w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames, restval="")
+        writer.writeheader()
+        writer.writerows(existing_rows)
         writer.writerow(row)
 
 

@@ -30,10 +30,14 @@ python experiments/enumerate_nqueens.py
 echo "[3/4] Coloreado de grafos (50 y 1000 nodos, backtracking + metaheuristica)"
 python experiments/run_graph_coloring.py
 
-echo "[4/4] Coloreado de grafos vs. OR-Tools (comparacion de tiempo/calidad)"
+echo "[4/5] Coloreado de grafos vs. OR-Tools (comparacion de tiempo/calidad)"
 python experiments/compare_coloring.py
 
-echo "Listo. Resultados en results/tables/ y results/solutions/."
+echo "[5/5] Generar graficas para el reporte"
+python experiments/make_plots.py
+
+echo "Listo. Resultados en results/tables/ y results/solutions/, graficas en report/figures/."
 echo "Traelos de vuelta a la laptop con, por ejemplo:"
 echo '  rsync -avz -e "ssh -p 264" diego@132.248.52.48:~/hw2/results/ ./results/'
 echo '  rsync -avz -e "ssh -p 264" diego@132.248.52.48:~/hw2/data/graphs/ ./data/graphs/'
+echo '  rsync -avz -e "ssh -p 264" diego@132.248.52.48:~/hw2/report/figures/ ./report/figures/'
