@@ -24,8 +24,9 @@ src/
     heuristics.py          mrv (selección de variable), lcv (orden de valores)
 
   metaheuristics/
-    base.py                random_complete_assignment, count_conflicts, random_neighbor
-    simulated_annealing.py Recocido simulado sobre un CSP genérico
+    simulated_annealing.py Recocido simulado sobre un CSP genérico (incluye sus
+                           helpers: random_complete_assignment, count_conflicts,
+                           random_neighbor)
 
   adversarial/        Minimax / poda alfa-beta — ONGOING (ver "Estado" abajo)
 

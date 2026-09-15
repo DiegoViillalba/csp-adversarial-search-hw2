@@ -35,9 +35,9 @@ class CSP:
 
     def __init__(
         self,
-        variables: tuple[Hashable, ...],
-        domains: dict[Hashable, tuple],
-        is_consistent: Callable[[dict], bool],
+        variables: tuple,
+        domains: dict,
+        is_consistent: Callable
     ) -> None:
         """Build a CSP.
 
