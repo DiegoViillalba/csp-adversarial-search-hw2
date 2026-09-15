@@ -27,7 +27,7 @@ src/
     base.py                random_complete_assignment, count_conflicts, random_neighbor
     simulated_annealing.py Recocido simulado sobre un CSP genérico
 
-  adversarial/        Minimax / poda alfa-beta — PENDIENTE (ver "Estado" abajo)
+  adversarial/        Minimax / poda alfa-beta — ONGOING (ver "Estado" abajo)
 
   problems/            Modelado de cada problema como CSP + interfaz solve_*
     nqueens.py           build_nqueens_csp, solve_backtracking, solve_metaheuristic,
@@ -35,7 +35,7 @@ src/
     graph_coloring.py     build_graph_coloring_csp, solve_backtracking,
                           solve_metaheuristic, count_conflicts
     australia_coloring.py Instancia de juguete (mapa de Australia) usada en tests
-    tic_tac_toe.py        PENDIENTE
+    tic_tac_toe.py        ONGOING
 
   integrations/
     ortools_coloring.py    Coloreado de grafos con OR-Tools (CP-SAT), baseline de comparación
@@ -53,7 +53,7 @@ experiments/          Scripts ejecutables (sin argumentos, leen configs/*.yaml)
   enumerate_nqueens.py      Todas las soluciones de N=100 (acotado, ver abajo)
   run_graph_coloring.py     Coloreado 50 y 1000 nodos, backtracking + metaheurística
   compare_coloring.py        + comparación contra OR-Tools
-  run_tic_tac_toe.py         PENDIENTE (depende de src/adversarial/ y src/problems/tic_tac_toe.py)
+  run_tic_tac_toe.py         ONGOING (depende de src/adversarial/ y src/problems/tic_tac_toe.py)
 
 notebooks/
   local_results.ipynb    Corre y muestra los escenarios livianos (N=8, 50 nodos) en la laptop
@@ -73,14 +73,14 @@ data/graphs/            Grafos generados/leídos por run_graph_coloring.py (igno
 
 | Parte del assignment | Estado |
 |---|---|
-| Backtracking + revisión hacia adelante + AC3 + ordenamiento (MRV/LCV) | ✅ implementado |
-| Recocido simulado | ✅ implementado |
-| Minimax | ❌ pendiente (`src/adversarial/minimax.py` vacío) |
-| N-reinas N=8 y N=100 (backtracking + metaheurística) | ✅ implementado |
-| Todas las soluciones de N-reinas N=100 | ✅ implementado (acotado, ver abajo) |
-| Coloreado de grafos 50 y 1000 nodos (backtracking + metaheurística) | ✅ implementado |
-| Coloreado de grafos vs. OR-Tools | ✅ implementado |
-| Gato con minimax | ❌ pendiente (`src/adversarial/`, `src/problems/tic_tac_toe.py` vacíos) |
+| Backtracking + revisión hacia adelante + AC3 + ordenamiento (MRV/LCV) | implementado |
+| Recocido simulado | implementado |
+| Minimax | ongoing (`src/adversarial/minimax.py` vacío) |
+| N-reinas N=8 y N=100 (backtracking + metaheurística) | implementado |
+| Todas las soluciones de N-reinas N=100 | implementado (acotado, ver abajo) |
+| Coloreado de grafos 50 y 1000 nodos (backtracking + metaheurística) | implementado |
+| Coloreado de grafos vs. OR-Tools | implementado |
+| Gato con minimax | ongoing (`src/adversarial/`, `src/problems/tic_tac_toe.py` vacíos) |
 | Ejercicios 1–4 | ver `report/sections/exercises.tex` |
 | Críticas de lecturas | ver `report/sections/readings.tex` |
 
