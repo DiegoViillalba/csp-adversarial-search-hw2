@@ -33,9 +33,7 @@ def random_complete_assignment(problem: CSP, rng: random.Random) -> dict:
     Returns:
         dict: variable -> value, one randomly chosen value per variable
     """
-    # Deliberately does NOT check is_consistent here — this is the starting
-    # point for local search, which is allowed (expected, even) to start
-    # from a state full of conflicts and improve from there.
+
     return {
         variable: rng.choice(problem.domains[variable])
         for variable in problem.variables
@@ -44,7 +42,7 @@ def random_complete_assignment(problem: CSP, rng: random.Random) -> dict:
 
 def count_conflicts(problem: CSP, assignment: dict) -> int:
     """Count how many pairs of variables violate a constraint under `assignment`.
-
+       NOTE: We used unique edge traversal to speed up computing
     Args:
         problem (CSP): CSP object
         assignment (dict): a COMPLETE assignment, variable -> value
@@ -52,46 +50,114 @@ def count_conflicts(problem: CSP, assignment: dict) -> int:
     Returns:
         int: number of conflicting pairs (0 means `assignment` is a solution)
     """
-    variables = list(problem.variables)
     conflicts = 0
 
-    # Check every UNORDERED pair exactly once (xj only ranges over variables
-    # AFTER xi in the list) — same 2-entry-dict trick as ac3.revise, just
-    # applied to every pair instead of stopping at the first support found.
-    # NOTE: this is O(num_variables^2) is_consistent calls per call to
-    # count_conflicts — fine at N=100, expensive at 1000 nodes (see the
-    # module NOTE above).
-    for i, xi in enumerate(variables):
-        for xj in variables[i + 1 :]:
-            pair = {xi: assignment[xi], xj: assignment[xj]}
-            if not problem.is_consistent(pair):
-                conflicts += 1
+
+    if problem.neighbors:
+        for v in problem.variables:
+            for n in problem.neighbors[v]:
+                if n > v:
+                    pair = {v: assignment[v], n: assignment[n]}
+
+                    if not problem.is_consistent(pair):
+                        conflicts += 1
+
+    else:
+
+        for i, xi in enumerate(problem.variables):
+            for xj in problem.variables[i + 1 :]:
+                
+                pair = {xi: assignment[xi], xj: assignment[xj]}
+                
+                if not problem.is_consistent(pair):
+                    conflicts += 1
+
 
     return conflicts
 
 
-def random_neighbor(problem: CSP, assignment: dict, rng: random.Random) -> dict:
-    """Produce a neighboring assignment: `assignment` with one randomly chosen
-    variable moved to a new, randomly chosen value from its domain.
+# NOTE: This implementation was realized after the previous one
+
+def conflicts_for_variable(problem: CSP, assignment: dict, variable) -> int:
+    """Count conflicts involving just `variable`, under its CURRENT value in
+    `assignment`, checked only against its neighbors (or every other
+    variable if `problem.neighbors` is None). Changing one variable can only
+    ever affect constraints touching it -- every other pair is unaffected --
+    so this is all `random_neighbor` needs to compute a delta instead of
+    paying for a full `count_conflicts` recount on every iteration.
 
     Args:
         problem (CSP): CSP object
-        assignment (dict): current COMPLETE assignment
+        assignment (dict): a COMPLETE assignment, variable -> value
+        variable: the variable to check
+
+    Returns:
+        int: number of neighbors (or other variables) currently conflicting
+            with `variable`'s value
+    """
+    others = (
+        problem.neighbors[variable]
+        if problem.neighbors
+        else (v for v in problem.variables if v != variable)
+    )
+
+    conflicts = 0
+    for other in others:
+        pair = {variable: assignment[variable], other: assignment[other]}
+        if not problem.is_consistent(pair):
+            conflicts += 1
+
+    return conflicts
+
+
+def random_neighbor(problem: CSP, assignment: dict, rng: random.Random) -> tuple:
+    """Move ONE randomly chosen variable to a new value, MUTATING `assignment`
+    in place instead of returning a copy (avoids allocating a full extra
+    assignment on every iteration of simulated_annealing), and reporting
+    exactly how much this one move changed the total conflict count.
+
+    Args:
+        problem (CSP): CSP object
+        assignment (dict): current COMPLETE assignment, mutated in place
         rng (random.Random): random number generator, for reproducibility
 
     Returns:
-        dict: a new assignment, differing from `assignment` in one variable
+        tuple[dict, tuple | None, int]: (assignment, undo_info, delta).
+            `assignment` is the SAME object passed in, now mutated.
+            `undo_info` is (variable, old_value) so the caller can revert
+            the move later with `assignment[variable] = old_value` — or
+            None if the chosen variable had no other value to try (nothing
+            was mutated, delta is 0). `delta` is how much the TOTAL conflict
+            count changed because of this move (negative = improved) --
+            add it to the caller's running cost instead of recomputing
+            count_conflicts from scratch.
     """
-    # dict(assignment) makes a shallow COPY — mutating `neighbor` below
-    # never touches the caller's `assignment`. Needed because simulated
-    # annealing keeps the current state around to compare against.
-    neighbor = dict(assignment)
-    variable = rng.choice(problem.variables)
-    # The new value can, by chance, be the same as the old one — that's
-    # fine, it just means this particular move happens to be a no-op.
-    neighbor[variable] = rng.choice(problem.domains[variable])
-    return neighbor
 
+    random_variable = rng.choice(problem.variables)
+    current_value = assignment[random_variable]
+
+    elegible_values = [
+        v for v in problem.domains[random_variable]
+        if v != current_value
+    ]
+
+    if not elegible_values:
+        return assignment, None, 0
+
+    conflicts_before = conflicts_for_variable(problem, assignment, random_variable)
+
+    assignment[random_variable] = rng.choice(elegible_values)
+
+    conflicts_after = conflicts_for_variable(problem, assignment, random_variable)
+
+    delta = conflicts_after - conflicts_before
+
+    return assignment, (random_variable, current_value), delta
+
+
+
+
+# ____ Main implementation ______
 
 def simulated_annealing(
     problem: CSP,
@@ -101,7 +167,10 @@ def simulated_annealing(
     time_limit_seconds: float | None = None,
     seed: int | None = None,
 ) -> tuple[dict, int]:
-    """Search for a zero-conflict assignment via simulated annealing.
+    """
+    Search for a zero-conflict assignment via simulated annealing. (Recocido
+    Simulado). Main refrence:
+    https://inst.eecs.berkeley.edu/~cs188/textbook/csp/local-search.html
 
     Args:
         problem (CSP): CSP object
@@ -119,53 +188,47 @@ def simulated_annealing(
         tuple[dict, int]: the best assignment found and its conflict count
             (0 means a real solution was found, not just the best attempt)
     """
+    # rng for  reproducibility
     rng = random.Random(seed)
     start_time = time.perf_counter()
 
-    # `current` is where the random walk is right now (can get worse).
-    # `best`/`best_cost` separately track the best state EVER seen, since
-    # simulated annealing is allowed to wander away from a good state and
-    # we don't want to lose it if that happens.
     current = random_complete_assignment(problem, rng)
     current_cost = count_conflicts(problem, current)
 
-    best, best_cost = current, current_cost
+    # `best` MUST be an independent copy, not `current` itself 
+    best, best_cost = dict(current), current_cost
     temperature = initial_temperature
 
     for _ in range(max_iterations):
         if best_cost == 0:
-            # Already found an actual solution — no point in continuing.
             break
 
         if (
             time_limit_seconds is not None
             and time.perf_counter() - start_time > time_limit_seconds
         ):
-            # Ran out of time — return whatever's best so far (this
-            # function is "anytime": it degrades gracefully, it doesn't
-            # just fail like backtrack does when it can't finish).
             break
 
-        neighbor = random_neighbor(problem, current, rng)
-        neighbor_cost = count_conflicts(problem, neighbor)
 
-        # Negative delta = neighbor has FEWER conflicts = strictly better.
-        delta = neighbor_cost - current_cost
+        current, old_state, delta = random_neighbor(problem, current, rng)
 
-        # Metropolis acceptance rule: always take improving moves; take a
-        # worsening move too, but only with probability exp(-delta/T).
-        # Bigger delta (much worse) or lower temperature (later in the run)
-        # both push that probability toward 0 — early on, hot, we wander
-        # more freely; late, cold, we mostly only accept improvements.
+        if old_state is None:
+            continue
+
+        # Metropolis acceptance: always keep improving moves; keep a
+        # worsening one too, with probability exp(-delta/temperature).
         if delta < 0 or rng.random() < math.exp(-delta / temperature):
-            current, current_cost = neighbor, neighbor_cost
+            current_cost = current_cost + delta
 
             if current_cost < best_cost:
-                best, best_cost = current, current_cost
+                best, best_cost = dict(current), current_cost
+        else:
+            variable, old_value = old_state
+            current[variable] = old_value
 
-        # Cool down a little every iteration. The 1e-10 floor exists only
-        # to avoid a division by zero in exp(-delta/temperature) above if
-        # cooling_rate/max_iterations ever drove it all the way to 0.
         temperature = max(temperature * cooling_rate, 1e-10)
 
     return best, best_cost
+
+
+        
