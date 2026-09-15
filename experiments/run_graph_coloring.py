@@ -27,9 +27,7 @@ from src.utils.random_seed import set_seed
 from src.utils.validation import is_valid_coloring
 
 
-def ensure_instance(
-    instance: dict, seed: int
-) -> tuple[int, list[tuple[int, int]]]:
+def ensure_instance(instance: dict, seed: int) -> tuple[int, list[tuple[int, int]]]:
     """Reads instance["path"], generating a random instance there first if it
     doesn't exist yet, so `python run_graph_coloring.py` works out of the box."""
     path = REPO_ROOT / instance["path"]

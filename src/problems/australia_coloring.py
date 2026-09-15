@@ -33,10 +33,7 @@ def constraint_satisfaction(assignment: dict[str, str]) -> bool:
             continue
 
         for neighbor in neighbors:
-            if (
-                neighbor in assignment
-                and assignment[region] == assignment[neighbor]
-            ):
+            if neighbor in assignment and assignment[region] == assignment[neighbor]:
                 return False
 
     return True

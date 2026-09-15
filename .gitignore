@@ -3,6 +3,7 @@ __pycache__/
 *.pyc
 .pytest_cache/
 *.egg-info/
+.DS_Store
 report/*.aux
 report/*.log
 report/*.out
@@ -10,3 +11,11 @@ report/*.toc
 report/*.bbl
 report/*.blg
 report/*.pdf
+
+# Generated locally or on the remote server, synced back manually (see
+# scripts/run_remote_heavy.sh) — not meant to live in git history, since the
+# 1000-node instance/solutions can get large and are fully reproducible.
+results/
+data/graphs/
+logs/
+.ipynb_checkpoints/

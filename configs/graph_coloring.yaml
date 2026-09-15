@@ -18,7 +18,8 @@ k_max: 12
 
 backtracking:
   use_forward_checking: true
-  use_ac3: false
+  use_ac3: true  # cheap now: build_graph_coloring_csp sets problem.neighbors,
+                 # so ac3() only walks real edges (~O(E)), not every vertex pair
   time_limit_seconds: 120
 
 metaheuristic:

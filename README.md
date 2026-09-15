@@ -109,9 +109,7 @@ def solve_metaheuristic(
     conflictos — revisa stats.objective)."""
 
 
-def count_conflicts(
-    edges: list[tuple[int, int]], coloring: dict[int, int]
-) -> int:
+def count_conflicts(edges: list[tuple[int, int]], coloring: dict[int, int]) -> int:
     """Aristas con extremos del mismo color — tu función objetivo."""
 ```
 

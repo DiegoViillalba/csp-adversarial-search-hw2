@@ -1,5 +1,5 @@
 """
-Diego Villalba 12-09-26
+Diego Villalba 13-09-26
 
 Forward checking: right after a variable is assigned, prune the domains of
 the still-unassigned variables so any value that would already conflict
@@ -26,31 +26,37 @@ def forward_check(problem: CSP, assignment: dict, variable) -> dict | None:
         None: if some unassigned variable was left with an empty domain,
             meaning this branch cannot lead to a solution
     """
+
     removed = {}
 
-    for other_variable in problem.variables:
-        if other_variable in assignment:
+    for other_var in problem.variables:
+        if other_var in assignment or other_var == variable:
             continue
-
         kept_values = []
         removed_values = []
 
-        for value in problem.domains[other_variable]:
-            assignment[other_variable] = value
+        for value in problem.domains[other_var]:
+            # Here we explore the domain on each value ans asess
+            # if its compatible keep it
+            assignment[other_var] = value
             if problem.is_consistent(assignment):
                 kept_values.append(value)
             else:
                 removed_values.append(value)
-            del assignment[other_variable]
+            del assignment[other_var]
 
         if removed_values:
-            removed[other_variable] = tuple(removed_values)
-            problem.domains[other_variable] = tuple(kept_values)
+            # Keep track of removed values
+            removed[other_var] = tuple(removed_values)
 
+            # NOTE: Here we transform the global object in pytho
+            # so we dont need to do it later
+            problem.domains[other_var] = tuple(kept_values)
         if not kept_values:
+            # Dead end: some variable has NO legal value left. Put back
+            # whatever we already pruned in THIS call
             restore_domains(problem, removed)
             return None
-
     return removed
 
 
@@ -63,4 +69,5 @@ def restore_domains(problem: CSP, removed: dict) -> None:
             values, exactly as returned by `forward_check`
     """
     for variable, values in removed.items():
+        # append again removed variables
         problem.domains[variable] = problem.domains[variable] + values

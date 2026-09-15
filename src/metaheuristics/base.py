@@ -24,6 +24,9 @@ def random_complete_assignment(problem: CSP, rng: random.Random) -> dict:
     Returns:
         dict: variable -> value, one randomly chosen value per variable
     """
+    # Deliberately does NOT check is_consistent here — this is the starting
+    # point for local search, which is allowed (expected, even) to start
+    # from a state full of conflicts and improve from there.
     return {
         variable: rng.choice(problem.domains[variable])
         for variable in problem.variables
@@ -43,6 +46,12 @@ def count_conflicts(problem: CSP, assignment: dict) -> int:
     variables = list(problem.variables)
     conflicts = 0
 
+    # Check every UNORDERED pair exactly once (xj only ranges over variables
+    # AFTER xi in the list) — same 2-entry-dict trick as ac3.revise, just
+    # applied to every pair instead of stopping at the first support found.
+    # NOTE: this is O(num_variables^2) is_consistent calls per call to
+    # count_conflicts — fine at N=100, expensive at 1000 nodes (see the
+    # NOTE in simulated_annealing.py).
     for i, xi in enumerate(variables):
         for xj in variables[i + 1 :]:
             pair = {xi: assignment[xi], xj: assignment[xj]}
@@ -64,7 +73,12 @@ def random_neighbor(problem: CSP, assignment: dict, rng: random.Random) -> dict:
     Returns:
         dict: a new assignment, differing from `assignment` in one variable
     """
+    # dict(assignment) makes a shallow COPY — mutating `neighbor` below
+    # never touches the caller's `assignment`. Needed because simulated
+    # annealing keeps the current state around to compare against.
     neighbor = dict(assignment)
     variable = rng.choice(problem.variables)
+    # The new value can, by chance, be the same as the old one — that's
+    # fine, it just means this particular move happens to be a no-op.
     neighbor[variable] = rng.choice(problem.domains[variable])
     return neighbor

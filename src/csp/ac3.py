@@ -1,5 +1,5 @@
 """
-Diego Villalba 12-09-26
+Diego Villalba 14-09-26
 
 AC3: enforce arc consistency on a CSP before search even starts. For every
 ordered pair of variables (Xi, Xj), every value left in Xi's domain must
@@ -7,13 +7,8 @@ have at least one compatible value in Xj's domain, or it gets removed.
 Removing a value can break consistency for pairs that were already fine,
 so those go back on the queue to be re-checked.
 
-NOTE: since CSP does not expose an explicit neighbor/constraint graph, this
-treats every pair of variables as a potential arc and lets `is_consistent`
-decide whether they actually constrain each other. Correct for all three
-of our problems, but on a large sparse graph (the 1000-node coloring
-instance) it re-checks many pairs that were never actually connected —
-an explicit neighbors structure on CSP would let us only queue real arcs.
-Left as-is for now given the time we have.
+NOTE: since the implementation of this algorithm we added a adjacency dict
+so we keep track of the neightbor values to avoidexporing all of them
 """
 
 from collections import deque
@@ -37,6 +32,8 @@ def revise(problem: CSP, xi, xj) -> bool:
     kept_values = []
 
     for x in problem.domains[xi]:
+        # "Support" = at least one y in Xj's domain such that (xi=x, xj=y)
+        # doesn't violate a constraint. We build a 2-entry dict {xi: x, xj: y}
         has_support = any(
             problem.is_consistent({xi: x, xj: y}) for y in problem.domains[xj]
         )
@@ -61,22 +58,40 @@ def ac3(problem: CSP) -> bool:
             solution), True otherwise (arc-consistent, but not
             necessarily solvable — that's still backtrack's job)
     """
-    queue = deque(
-        (xi, xj)
-        for xi in problem.variables
-        for xj in problem.variables
-        if xi != xj
-    )
+    # Start with every ordered pair (Xi, Xj), Xi != Xj, as a candidate arc.
+    # Order matters: (Xi, Xj) and (Xj, Xi) are two different checks —
+    # revising Xi against Xj doesn't automatically revise Xj against Xi.
+
+    # NOTE: Implementation of an optimization with neighbors in case of adj dict
+
+    if problem.neighbors:
+        queue = deque(
+            (xi, xj) for xi in problem.variables for xj in problem.neighbors[xi]
+        )
+    else:
+        queue = deque(
+            (xi, xj) for xi in problem.variables for xj in problem.variables if xi != xj
+        )
 
     while queue:
         xi, xj = queue.popleft()
 
         if revise(problem, xi, xj):
+            # Xi's domain just shrank. If it's now empty, no value of Xi
+            # can ever work -> the whole CSP is unsatisfiable, stop here.
             if not problem.domains[xi]:
                 return False
 
-            for xk in problem.variables:
-                if xk != xi and xk != xj:
-                    queue.append((xk, xi))
+            # Any OTHER variable Xk that constrains Xi might have relied on
+            # a value we just removed from Xi -> its own arc (Xk, Xi) needs
+            # to be re-checked. When we know the real constraint graph, only
+            # Xi's actual neighbors can be affected -- everyone else was
+            # never constrained against Xi in the first place.
+            if problem.neighbors is not None:
+                requeue = (xk for xk in problem.neighbors[xi] if xk != xj)
+            else:
+                requeue = (xk for xk in problem.variables if xk != xi and xk != xj)
+            for xk in requeue:
+                queue.append((xk, xi))
 
     return True

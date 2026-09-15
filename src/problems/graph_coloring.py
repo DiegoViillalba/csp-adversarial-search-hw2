@@ -6,8 +6,14 @@ Implementation of the graph coloring problem as a csp
 
 from collections import defaultdict
 
+from src.csp.ac3 import ac3
+from src.csp.backtracking import backtrack
+from src.csp.heuristics import lcv, mrv
 from src.csp.problem import CSP
+from src.metaheuristics.simulated_annealing import simulated_annealing
 from src.utils.graph_io import generate_random_graph
+from src.utils.metrics import SearchStats, timer
+from src.utils.timeout import time_limit
 
 # _____ Constants for the test problem. _____
 
@@ -85,8 +91,107 @@ def build_graph_coloring_csp(vertex_num: int, edges: list, k: int) -> CSP:
 
         return True
 
-    return CSP(
+    csp = CSP(
         variables=vertices,
         domains=domain,
         is_consistent=_constraint_satisfaction,
     )
+
+    # adding the optiional call for this cases
+    csp.neighbors = adjacency
+
+    return csp
+
+
+# _____ Interface expected by experiments/run_graph_coloring.py etc _____
+# (see README.md "Interfaces esperadas" for the exact contract)
+
+
+def count_conflicts(edges: list, coloring: dict[int, int]) -> int:
+    """Objective function: number of edges whose endpoints share a color."""
+    return sum(1 for u, v in edges if coloring.get(u) == coloring.get(v))
+
+
+def solve_backtracking(
+    num_vertices: int,
+    edges: list[tuple[int, int]],
+    k: int,
+    use_forward_checking: bool,
+    use_ac3: bool,
+    time_limit_seconds: float | None,
+):
+    """Own coloring with exactly k colors, or None if infeasible / timed out."""
+    problem = build_graph_coloring_csp(num_vertices, edges, k)
+
+    if use_ac3 and not ac3(problem):
+        return None, SearchStats(
+            method="backtracking+ac3" + ("+fc" if use_forward_checking else ""),
+            problem="graph_coloring",
+            instance_size=num_vertices,
+            solved=False,
+            time_seconds=0.0,
+            extra={"k": k, "reason": "ac3_detected_unsatisfiable"},
+        )
+
+    timed_out = False
+    solution = None
+    with timer() as elapsed:
+        try:
+            with time_limit(time_limit_seconds):
+                solution = backtrack(
+                    problem,
+                    {},
+                    heuristic=mrv,
+                    value_order=lcv,
+                    forward_checking=use_forward_checking,
+                )
+        except TimeoutError:
+            timed_out = True
+
+    coloring = dict(solution) if solution else None
+
+    method = "backtracking"
+    if use_forward_checking:
+        method += "+fc"
+    if use_ac3:
+        method += "+ac3"
+
+    stats = SearchStats(
+        method=method,
+        problem="graph_coloring",
+        instance_size=num_vertices,
+        solved=coloring is not None,
+        objective=0 if coloring is not None else None,
+        time_seconds=elapsed(),
+        extra={"k": k, "timed_out": timed_out},
+    )
+    return coloring, stats
+
+
+def solve_metaheuristic(
+    num_vertices: int,
+    edges: list[tuple[int, int]],
+    k: int,
+    seed: int | None,
+    **params,
+):
+    """Best coloring found using exactly k colors (may still have conflicts
+    — check stats.objective)."""
+    problem = build_graph_coloring_csp(num_vertices, edges, k)
+
+    with timer() as elapsed:
+        assignment, cost = simulated_annealing(problem, seed=seed, **params)
+
+    stats = SearchStats(
+        method="simulated_annealing",
+        problem="graph_coloring",
+        instance_size=num_vertices,
+        solved=cost == 0,
+        objective=cost,
+        time_seconds=elapsed(),
+        extra={
+            "k": k,
+            **{k_: v for k_, v in params.items() if k_ != "time_limit_seconds"},
+        },
+    )
+    return dict(assignment), stats

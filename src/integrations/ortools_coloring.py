@@ -28,9 +28,7 @@ def solve_coloring_ortools(
     from a timeout (INFEASIBLE vs UNKNOWN).
     """
     model = cp_model.CpModel()
-    color = [
-        model.NewIntVar(0, k - 1, f"color_{v}") for v in range(num_vertices)
-    ]
+    color = [model.NewIntVar(0, k - 1, f"color_{v}") for v in range(num_vertices)]
 
     for u, v in edges:
         model.Add(color[u] != color[v])

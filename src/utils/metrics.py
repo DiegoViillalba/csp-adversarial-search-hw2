@@ -11,10 +11,11 @@ from __future__ import annotations
 import csv
 import json
 import time
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Iterator
+from typing import Any
 
 
 @dataclass
@@ -86,9 +87,7 @@ def append_result_csv(path: str | Path, stats: SearchStats) -> None:
         writer.writerow(row)
 
 
-def save_solution_json(
-    path: str | Path, solution: Any, stats: SearchStats
-) -> None:
+def save_solution_json(path: str | Path, solution: Any, stats: SearchStats) -> None:
     """Dump a solution + its stats to results/solutions/ for later inspection."""
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)

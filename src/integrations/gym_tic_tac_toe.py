@@ -23,7 +23,7 @@ _VENDOR_DIR = Path(__file__).parent / "_vendor"
 if str(_VENDOR_DIR) not in sys.path:
     sys.path.insert(0, str(_VENDOR_DIR))
 
-from gym_tictactoe.envs.tictactoe_env import TictactoeEnv  # noqa: E402
+from gym_tictactoe.envs.tictactoe_env import TictactoeEnv
 
 Board = tuple[tuple[int, ...], ...]
 
@@ -31,9 +31,7 @@ PLAYER_X = 1  # moves first
 PLAYER_O = 2
 
 
-def make_env(
-    size: int = 3, num_winning: int = 3, **reward_kwargs: Any
-) -> TictactoeEnv:
+def make_env(size: int = 3, num_winning: int = 3, **reward_kwargs: Any) -> TictactoeEnv:
     env = TictactoeEnv(size=size, num_winning=num_winning, **reward_kwargs)
     env.reset()
     return env
@@ -65,9 +63,7 @@ def apply_move(
     Returns (observation, reward, done, info) straight from env.step().
     """
     if player not in (PLAYER_X, PLAYER_O):
-        raise ValueError(
-            f"player must be {PLAYER_X} or {PLAYER_O}, got {player}"
-        )
+        raise ValueError(f"player must be {PLAYER_X} or {PLAYER_O}, got {player}")
     return env.step([player - 1, position])
 
 

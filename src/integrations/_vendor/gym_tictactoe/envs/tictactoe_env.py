@@ -4,8 +4,8 @@
 # src/problems/tic_tac_toe.py instead, using the thin wrapper in
 # src/integrations/gym_tic_tac_toe.py.
 import gym
-from gym import error, spaces, utils
-from gym.utils import seeding
+from gym import spaces
+
 from .helpers import *
 
 
