@@ -62,7 +62,8 @@ notebooks/
   local_results.ipynb    Corre y muestra los escenarios livianos (N=8, 50 nodos) en la laptop
 
 scripts/
-  run_remote_heavy.sh    Corre los escenarios pesados (N=100, 1000 nodos) en un servidor remoto
+  run_remote_heavy.sh     Corre los escenarios pesados (N=100, 1000 nodos) en un servidor remoto
+  run_remote_overnight.sh Exploratorio: presupuestos de horas para ver limites de computo (no pedido)
 
 tests/                  pytest — ver "Estado" abajo para cuáles existen
 
@@ -136,6 +137,16 @@ corrieron en un servidor remoto para no ocupar la laptop mientras tanto:
   resultados se traen de vuelta con `rsync` a `results/`, `data/graphs/` y `report/figures/`, y
   se usan igual que si se hubieran generado localmente — ver comentarios dentro del script para
   el uso exacto.
+
+### Explorar límites de cómputo (no pedido por el enunciado)
+
+`scripts/run_remote_overnight.sh` deja corriendo, en este orden, `compare_schedulers.py` (rápido,
+asegura esos resultados primero) y luego dos corridas de presupuesto mucho más grande para ver
+hasta dónde da el servidor: `enumerate_nqueens_overnight.py` (N=100, 5 horas) y
+`run_graph_coloring_overnight.py` (coloreado de 1000 nodos, k=8, **sin** forward checking ni AC3,
+55 horas — contraste directo contra la versión con heurísticas, que resuelve el mismo k en
+~8.5s). Ambas escriben en archivos `*_overnight.*` separados, así que nunca pisan los resultados
+de la corrida normal.
 
 ### Sobre "encontrar todas las soluciones para N=100"
 
