@@ -22,7 +22,6 @@ import matplotlib
 
 matplotlib.use("Agg")  # headless -- no display on the remote server
 import matplotlib.pyplot as plt
-
 from _common import REPO_ROOT, results_path
 
 FIGURES_DIR = REPO_ROOT / "report" / "figures"
@@ -153,14 +152,28 @@ def plot_coloring_comparison() -> None:
         width = 0.25
         fig, ax = plt.subplots()
         for i, (method, label) in enumerate(zip(methods, labels)):
+            # nan, no None: un metodo que no encontro ningun k factible dentro
+            # del rango probado deja la celda vacia en el csv. matplotlib
+            # sabe saltarse una barra con altura nan (no la dibuja), pero
+            # truena con None -- intenta sumarle un numero adentro.
             values = [
                 float(r[f"{metric}_{method}"])
                 if r[f"{metric}_{method}"] not in ("", "None")
-                else None
+                else float("nan")
                 for r in rows
             ]
             offset = (i - 1) * width
-            ax.bar([xi + offset for xi in x], values, width, label=label)
+            bars = ax.bar([xi + offset for xi in x], values, width, label=label)
+            for bar, value in zip(bars, values):
+                if value != value:  # nan != nan es la forma estandar de detectarlo
+                    ax.annotate(
+                        "N/A",
+                        xy=(bar.get_x() + bar.get_width() / 2, 0),
+                        ha="center",
+                        va="bottom",
+                        fontsize=8,
+                        rotation=90,
+                    )
         ax.set_xticks(list(x))
         ax.set_xticklabels(instances)
         ax.set_ylabel(ylabel)
@@ -216,7 +229,9 @@ def plot_scheduler_convergence() -> None:
         found_any = False
         for scheduler_name in SCHEDULER_NAMES:
             data = _read_json(
-                results_path("solutions", f"schedulers_{problem_name}_{scheduler_name}.json")
+                results_path(
+                    "solutions", f"schedulers_{problem_name}_{scheduler_name}.json"
+                )
             )
             if data is None:
                 continue
@@ -274,7 +289,9 @@ def plot_scheduler_time() -> None:
         ax2.set_title("calidad")
 
         n_seeds = len({r["seed"] for r in problem_rows})
-        fig.suptitle(f"Schedulers ({problem_name}): tiempo vs. calidad, promedio de {n_seeds} seeds")
+        fig.suptitle(
+            f"Schedulers ({problem_name}): tiempo vs. calidad, promedio de {n_seeds} seeds"
+        )
         _save(fig, f"schedulers_{problem_name}_time_quality.png")
 
 
