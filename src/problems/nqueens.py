@@ -7,6 +7,7 @@ inheriting the CSP class to createa na object
 """
 
 import time
+from collections.abc import Callable
 
 from src.csp.ac3 import ac3
 from src.csp.backtracking import backtrack
@@ -125,21 +126,26 @@ def solve_backtracking(
     problem = build_nqueens_csp(n)
 
     # AC3 as a preprocessing pass, before backtrack() ever runs. If it
-    # empties some column's domain the CSP has no solution at all, so we
-    # skip straight to reporting failure instead of searching.
-    if use_ac3 and not ac3(problem):
-        return None, SearchStats(
-            method="backtracking+ac3" + ("+fc" if use_forward_checking else ""),
-            problem="nqueens",
-            instance_size=n,
-            solved=False,
-            time_seconds=0.0,
-            extra={"reason": "ac3_detected_unsatisfiable"},
-        )
+    # empties some column's domain the CSP has no solution so skip
+
+    if use_ac3:
+        activation_ac3 = ac3(problem)
+        if not activation_ac3:
+            return None, SearchStats(
+                method="backtracking+ac3" + ("+fc" if use_forward_checking else ""),
+                problem="nqueens",
+                instance_size=n,
+                solved=False,
+                time_seconds=0.0,
+                extra={"reason": "ac3_detected_unsatisfiable"},
+            )
 
     timed_out = False
     solution = None
     node_counter = [0]
+
+    # Using context mannagers to be careful with recursion
+    # https://medium.com/analytics-vidhya/increase-maximum-recursion-depth-in-python-using-context-manager-1c67eaf4e71b
     with timer() as elapsed:
         try:
             with time_limit(time_limit_seconds), deeper_recursion(n + 200):
@@ -175,6 +181,84 @@ def solve_backtracking(
     return positions, stats
 
 
+def enumerate_solutions(
+    n: int = 8,
+    max_solutions: int | None = None,
+    time_limit_seconds: float | None = 30.0,
+    use_forward_checking: bool = True,
+    use_ac3: bool = True,
+) -> tuple[list[list[int]], SearchStats]:
+    """All solutions found until the first limit is hit.
+
+    stats.extra["exhaustive"]: True iff the search finished on its own
+    (not cut off by max_solutions/time_limit_seconds).
+
+    Reuses the generic backtrack engine with find_all=True, incorporating
+    time limits and allowing heuristic/forward_checking configurations.
+    """
+    # Create the CSP problem instance for N-queens
+    problem = build_nqueens_csp(n)
+
+    # Apply AC-three preprocessing if requested
+    if use_ac3:
+        ac3(problem)
+
+    node_counter = [0]
+    start = time.perf_counter()
+    exhaustive = True
+    
+    # NEW: The accumulator list that backtrack will safely update in real-time
+    solutions_dicts = []
+
+    try:
+        # Using context managers to handle limits and recursion depth
+        with time_limit(time_limit_seconds), deeper_recursion(n + 200):
+            backtrack(
+                problem=problem,
+                assignment={},
+                heuristic=mrv,
+                value_order=lcv,
+                forward_checking=use_forward_checking,
+                node_counter=node_counter,
+                find_all=True,
+                solutions_accumulator=solutions_dicts,  # Passed by reference
+            )
+    except Exception:
+        # Timeout or recursion error reached; the search was cut off.
+        # solutions_dicts already contains all solutions found right up to the cutoff.
+        exhaustive = False
+
+    # Convert the assignment dictionaries into the expected list of integers format
+    solutions: list[list[int]] = []
+    for sol_dict in solutions_dicts:
+        if max_solutions is not None and len(solutions) >= max_solutions:
+            exhaustive = False
+            break
+        solutions.append([sol_dict[c] for c in range(n)])
+
+    # Mark as non-exhaustive if total solutions exceed the maximum allowed limit
+    if max_solutions is not None and len(solutions_dicts) > max_solutions:
+        exhaustive = False
+
+    # Determine solved status (False if cut off by timeout or max_solutions)
+    is_solved = False if not exhaustive else (len(solutions) > 0)
+
+    stats = SearchStats(
+        method="backtracking_enumeration",
+        problem="nqueens",
+        instance_size=n,
+        solved=is_solved,
+        objective=len(solutions),
+        nodes_expanded=node_counter[0],
+        time_seconds=time.perf_counter() - start,
+        extra={
+            "exhaustive": exhaustive,
+            "max_solutions": max_solutions,
+            "peak_memory_mb": peak_memory_mb(),
+        },
+    )
+    return solutions, stats
+
 def solve_metaheuristic(
     n: int, seed: int | None, **params
 ) -> tuple[list[int], SearchStats]:
@@ -202,72 +286,3 @@ def solve_metaheuristic(
         },
     )
     return positions, stats
-
-
-def enumerate_solutions(
-    n: int, max_solutions: int | None, time_limit_seconds: float | None
-) -> tuple[list[list[int]], SearchStats]:
-    """All solutions found until the first limit is hit.
-
-    stats.extra["exhaustive"]: True iff the search finished on its own
-    (not cut off by max_solutions/time_limit_seconds).
-
-    This is a small dedicated recursive search rather than a reuse of
-    backtrack(): the generic engine returns the FIRST solution and stops,
-    it has no notion of "keep going and collect every solution up to a
-    cap" — that behavior is specific enough to this function that it isn't
-    worth bolting onto src/csp/backtracking.py. It still reuses
-    constraint_satisfaction, so the actual N-queens rule lives in one place.
-    """
-    solutions: list[list[int]] = []
-    assignment: dict[int, int] = {}
-    start = time.perf_counter()
-    exhaustive = True
-    nodes_expanded = 0
-
-    def limit_reached() -> bool:
-        nonlocal exhaustive
-        if max_solutions is not None and len(solutions) >= max_solutions:
-            exhaustive = False
-            return True
-        if (
-            time_limit_seconds is not None
-            and time.perf_counter() - start > time_limit_seconds
-        ):
-            exhaustive = False
-            return True
-        return False
-
-    def place(col: int) -> None:
-        nonlocal nodes_expanded
-        nodes_expanded += 1
-        if limit_reached():
-            return
-        if col == n:
-            solutions.append([assignment[c] for c in range(n)])
-            return
-        for row in range(n):
-            assignment[col] = row
-            if constraint_satisfaction(assignment):
-                place(col + 1)
-            del assignment[col]
-            if limit_reached():
-                return
-
-    place(0)
-
-    stats = SearchStats(
-        method="backtracking_enumeration",
-        problem="nqueens",
-        instance_size=n,
-        solved=len(solutions) > 0,
-        objective=len(solutions),
-        nodes_expanded=nodes_expanded,
-        time_seconds=time.perf_counter() - start,
-        extra={
-            "exhaustive": exhaustive,
-            "max_solutions": max_solutions,
-            "peak_memory_mb": peak_memory_mb(),
-        },
-    )
-    return solutions, stats

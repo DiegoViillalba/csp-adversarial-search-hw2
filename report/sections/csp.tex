@@ -19,6 +19,33 @@
 % (o si) una enumeración exhaustiva es viable.
 
 \subsection{Coloreado de grafos}
+\label{sec:coloring-backtracking-1000}
 % TODO (5 pts aplicar): 50 y 1000 nodos con backtracking. Formulación CSP
 % (variables=vértices, dominio=colores, restricción=adyacentes distintos) y
 % cómo decidiste el valor de k. Ver results/tables/graph_coloring.csv.
+
+Formulación: variables = vértices, dominio de cada variable = $\{0, \dots, k-1\}$ (los $k$
+colores disponibles), restricción = todo par de vértices adyacentes debe recibir colores
+distintos. El valor de $k$ para cada instancia se determinó por búsqueda incremental: se prueba
+$k = k_{\min}, k_{\min}+1, \dots$ hasta encontrar el primero factible (ver
+\code{find\_min\_k\_backtracking} en \code{experiments/run\_graph\_coloring.py}).
+
+\textbf{50 nodos} (\code{gc\_50\_7.txt}, 865 aristas, densidad 0.71): backtracking con FC+AC3+MRV
++LCV encuentra $k=14$ como el mínimo factible en 2.41s, coincidiendo con el óptimo confirmado por
+OR-Tools (Sección~\ref{sec:coloring-ortools-1000} de metaheurística). El nombre del archivo
+sugiere 7 colores, pero eso no corresponde al número cromático real: $k=7$ se prueba
+\emph{infactible} de forma exhaustiva en 2.95s, y $k=8$ a $13$ caen en la zona dura de la
+transición de fase clásica en CSP (ni resuelven ni prueban infactibilidad dentro de un
+presupuesto de 120s por intento).
+
+\textbf{1000 nodos} (\code{gc\_1000\_9.txt}, 449{,}735 aristas, densidad 0.90): esta instancia
+resultó mucho más densa de lo que sugiere su nombre. Una clique de tamaño $\sim$49 (cota
+inferior probada) y un coloreo voraz que solo logra 315 colores (cota superior) ya indican que
+el número cromático real está muy lejos de 9. Backtracking, incluso en $k=302$ (el mejor $k$
+confirmado factible, ver más abajo), \textbf{no logra resolver ni probar nada}: se agota su
+presupuesto de 1800s habiendo expandido únicamente 2 nodos. La causa no es el tamaño del árbol
+de búsqueda sino el costo \emph{por nodo}: con un dominio de 302 colores por variable, forward
+checking tiene que revisar hasta $\sim$450 vecinos $\times$ 302 valores posibles en cada
+asignación --- el cuello de botella aquí es la anchura del dominio, no la profundidad de la
+búsqueda, un régimen de dificultad distinto al de N-reinas (donde el problema era la ausencia de
+heurística de orden, no el costo por nodo).

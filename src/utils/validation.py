@@ -1,9 +1,5 @@
-"""Independent solution checkers.
-
-These do NOT reimplement the objective/cost function your solvers optimize
-(that is yours to define, per problem, as the assignment asks). They exist
-so tests and experiment runners can sanity-check a solver's output without
-trusting the solver's own bookkeeping.
+""" Diego Villalba 16-09-26
+Independent solution checkers. Made so validation chekcing is
 """
 
 from __future__ import annotations
@@ -11,7 +7,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 
 
-def is_valid_nqueens_solution(positions: list[int]) -> bool:
+def is_valid_nqueens_solution(positions) -> bool:
     """positions[col] = row of the queen in that column. Checks no two queens
     share a row or a diagonal (columns are distinct by construction)."""
     n = len(positions)

@@ -10,8 +10,8 @@ env:
   reward_drawn: 0
 
 agents:
-  player_1: minimax          # "minimax" or "alpha_beta" or "random"
-  player_2: alpha_beta
+  player_1: minimax          # "minimax" or "random" (alpha_beta agent not implemented, not required by the assignment)
+  player_2: minimax
 
 num_games: 1
 render: true

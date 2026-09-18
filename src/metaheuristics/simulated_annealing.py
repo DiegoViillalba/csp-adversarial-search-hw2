@@ -14,10 +14,9 @@ https://smartmobilityalgorithms.github.io/book/content/TrajectoryAlgorithms/Simu
 import math
 import random
 import time
-
 from collections.abc import Callable
-from src.csp.problem import CSP
 
+from src.csp.problem import CSP
 
 # ____ Helper Functions ____
 

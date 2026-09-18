@@ -12,8 +12,8 @@ interpreter's own limit, not the C stack, is the actual fix here.
 from __future__ import annotations
 
 import sys
+from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import Iterator
 
 
 @contextmanager

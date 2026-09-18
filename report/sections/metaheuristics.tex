@@ -15,7 +15,57 @@
 % conflicto) y resultados en 50 y 1000 nodos. Compara contra backtracking
 % (results/tables/graph_coloring.csv).
 
+Función objetivo: número de aristas cuyos dos extremos comparten color (\code{count\_conflicts}
+en \code{src/problems/graph\_coloring.py}) --- 0 significa coloración válida con exactamente $k$
+colores. Igual que en backtracking, se busca incrementalmente el menor $k$ donde el recocido
+simulado converge a 0 conflictos.
+
+\textbf{50 nodos}: converge a $k=15$ en 0.24s (un color más que el óptimo de backtracking/
+OR-Tools, $k=14$) --- consistente con ser una heurística, no un método exacto: encuentra el
+primer $k$ factible de su búsqueda, no necesariamente el mínimo global.
+
+\textbf{1000 nodos, $k=302$}: se probaron los tres esquemas de enfriamiento (geométrico,
+exponencial, sinusoidal) con 1800s cada uno. \textbf{Ninguno llega a 0 conflictos} ---
+geométrico y exponencial terminan en 259 conflictos ($\sim$60{,}000 iteraciones cada uno),
+sinusoidal en 233 (el mejor de los tres, $\sim$60{,}200 iteraciones). Los parámetros por defecto
+(\code{initial\_temperature=10}, \code{cooling\_rate=0.995}) están calibrados para instancias
+mucho más chicas/dispersas que las probadas en las Secciones~2--3; a esta densidad (0.90) y
+dominio (302 colores), la metaheurística tampoco es competitiva --- a diferencia de backtracking
+(que ni siquiera avanza, Secci\'on~\ref{sec:coloring-backtracking-1000}), aquí sí hay progreso
+medible pero insuficiente en el presupuesto disponible.
+
 \subsection{Comparaci\'on con OR-Tools}
+\label{sec:coloring-ortools-1000}
 % TODO (5 pts): tabla de results/tables/coloring_comparison.csv --- tiempo
 % de cómputo y número de colores usado por backtracking, tu metaheurística,
 % y OR-Tools (CP-SAT) en las mismas instancias. Discute las diferencias.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Instancia & Backtracking & Recocido simulado & OR-Tools (CP-SAT) \\
+\midrule
+50 nodos & $k=14$ (2.41s) & $k=15$ (0.24s) & $k=14$ (0.20s) \\
+1000 nodos & no resuelve (1800s, 2 nodos) & no converge (1800s, 233 confl.) & $k=302$ (858s, \textbf{óptimo probado}) \\
+\bottomrule
+\end{tabular}
+\caption{Coloreado de grafos: colores usados y tiempo por método. Para 1000 nodos, $k=302$ es
+el mejor valor confirmado factible mediante búsqueda binaria/galopante sobre OR-Tools (ver
+\code{experiments/graph\_coloring\_gallop\_overnight.py}); el número cromático exacto no se
+determinó por completo dentro del presupuesto de cómputo disponible (ventana final $[48, 302]$).}
+\end{table}
+
+En 50 nodos los tres métodos coinciden o casi coinciden con el óptimo real ($k=14$), y OR-Tools
+es el más rápido incluso habiendo probado $k=10$ a $13$ (todos infactibles o indecisos) antes de
+confirmar $k=14$. En 1000 nodos la diferencia es cualitativa, no solo de velocidad: OR-Tools es
+el \'unico de los tres capaz de resolver algo --- backtracking ni siquiera avanza por el costo
+por nodo del dominio ancho, y la metaheurística progresa pero no converge. Esto refleja que
+CP-SAT usa propagación de restricciones y aprendizaje de cláusulas mucho más sofisticados que
+nuestra combinación de FC+AC3+MRV+LCV, una ventaja que se vuelve decisiva conforme crece la
+densidad y el tamaño de la instancia. El número cromático exacto de \code{gc\_1000\_9.txt}
+sigue sin determinarse: se acotó a $[48, 302]$ (clique de tamaño 49 como cota inferior probada,
+$k=302$ como cota superior probada) mediante búsqueda binaria/galopante con OR-Tools, mucho más
+efectiva para este propósito que backtracking o la metaheurística por la misma razón anterior
+--- ver \code{experiments/graph\_coloring\_gallop\_overnight.py} y
+\code{results/tables/graph\_coloring\_gallop\_overnight.csv} para el detalle de la búsqueda.
